@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import { mockUsers } from '@/lib/mockData';
 import type { UserProfile } from '@/types';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Edit3, LogOut, Settings, Star } from 'lucide-react';

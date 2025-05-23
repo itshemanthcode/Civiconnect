@@ -1,13 +1,14 @@
+
 "use server";
 
 import { z } from 'zod';
-import { prioritizeIssueReports, type PrioritizeIssueReportsOutput } from '@/ai/flows/prioritize-reports';
-import type { Issue } from '@/types'; // Assuming types are defined
-import { mockUsers } from '@/lib/mockData'; // For mock reporterId
+// Comment out AI flow and other complex imports for diagnostics
+// import { prioritizeIssueReports, type PrioritizeIssueReportsOutput } from '@/ai/flows/prioritize-reports';
+// import type { Issue } from '@/types'; 
+// import { mockUsers } from '@/lib/mockData'; 
 
 const ReportIssueFormSchema = z.object({
-  description: z.string().min(10),
-  // image: z.any().optional(), // Assuming image handling is complex and mocked for now
+  description: z.string().min(10, "Description must be at least 10 characters long."),
   latitude: z.string().optional(),
   longitude: z.string().optional(),
   address: z.string().optional(),
@@ -17,7 +18,7 @@ const ReportIssueFormSchema = z.object({
 interface SubmitIssueResult {
     success: boolean;
     issueId?: string;
-    aiAnalysis?: PrioritizeIssueReportsOutput;
+    // aiAnalysis?: PrioritizeIssueReportsOutput; // Temporarily removed
     error?: string;
 }
 
@@ -28,51 +29,33 @@ export async function submitIssue(formData: FormData): Promise<SubmitIssueResult
     longitude: formData.get('longitude'),
     address: formData.get('address'),
     timestamp: formData.get('timestamp'),
-    // image handling would be here
   };
+
+  console.log("Simplified submitIssue called with rawFormData:", rawFormData);
 
   const validation = ReportIssueFormSchema.safeParse(rawFormData);
 
   if (!validation.success) {
     console.error("Form validation failed:", validation.error.flatten().fieldErrors);
-    return { success: false, error: "Invalid form data. " + validation.error.flatten().fieldErrors.description?.[0] };
-  }
-
-  const { description, latitude, longitude, address, timestamp }_ = validation.data;
-  const parsedTimestamp = timestamp || new Date().toISOString();
-  const parsedLatitude = parseFloat(latitude || '0');
-  const parsedLongitude = parseFloat(longitude || '0');
-  
-  try {
-    // 1. Prioritize with AI
-    const aiResult = await prioritizeIssueReports({ reportText: description });
-
-    // 2. (Mock) Save the issue to a database
-    const newIssue: Issue = {
-      id: `issue-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-      description,
-      // imageUrl: "mock-image-url.png" // if image was processed
-      timestamp: parsedTimestamp,
-      gpsLocation: {
-        latitude: parsedLatitude,
-        longitude: parsedLongitude,
-        address: address,
-      },
-      status: 'Reported',
-      upvotes: 0,
-      verifications: 0,
-      reporterId: mockUsers[0].id, // Mock reporter
-      aiAnalysis: aiResult,
-    };
-
-    console.log("New issue (mock save):", newIssue);
-    // In a real app: await db.issues.create(newIssue);
-
-    return { success: true, issueId: newIssue.id, aiAnalysis: aiResult };
-
-  } catch (error) {
-    console.error("Error submitting issue:", error);
-    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during submission.";
+    // Ensure a more specific error message if description is missing/short
+    const descriptionError = validation.error.flatten().fieldErrors.description?.[0];
+    const errorMessage = descriptionError ? `Invalid description: ${descriptionError}` : "Invalid form data.";
     return { success: false, error: errorMessage };
   }
+  
+  // Simulate success without AI call or mock data interaction
+  // This is to test if the AI flow import is causing the chunk loading issue.
+  await new Promise(resolve => setTimeout(resolve, 100)); // Simulate some async work
+
+  console.log("Simplified submitIssue successful (mock).");
+  return { 
+    success: true, 
+    issueId: `temp-issue-${Date.now()}`,
+    // aiAnalysis: { // Mock AI analysis if needed for the toast, or remove from toast
+    //   issueType: "N/A (Diagnostic)",
+    //   severity: "N/A",
+    //   priorityScore: 0,
+    //   reason: "Diagnostic mode: AI analysis bypassed."
+    // }
+  };
 }

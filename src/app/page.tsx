@@ -20,9 +20,9 @@ export default function DashboardPage() {
   const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
-    // Simulate fetching all raw issue data (metadata only)
-    // In a real app, this would be an API call to get issue list without images.
-    const sortedIssues = [...mockIssues].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    // Filter for "Reported" issues and then sort by timestamp
+    const reportedIssues = mockIssues.filter(issue => issue.status === 'Reported');
+    const sortedIssues = [...reportedIssues].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     setAllRawIssues(sortedIssues);
     setIsLoading(false);
   }, []);
@@ -30,6 +30,8 @@ export default function DashboardPage() {
   const generateImagesForBatch = async (issuesBatch: Issue[]): Promise<Issue[]> => {
     return Promise.all(
       issuesBatch.map(async (issue) => {
+        // This logic correctly prioritizes already existing images (like user uploads)
+        // and only generates if it's a placeholder and a hint is available.
         if (issue.imageUrl && issue.imageUrl.startsWith('https://placehold.co') && issue.imageAiHint) {
           try {
             const imageResult = await generateIssueImage({ prompt: issue.imageAiHint });
@@ -98,8 +100,8 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <h1 className="text-3xl font-bold tracking-tight text-foreground">Community Reports</h1>
       
-      {displayedIssues.length === 0 && !isLoadingMore && (
-        <p className="text-muted-foreground">No issues reported yet. Be the first to report an issue!</p>
+      {displayedIssues.length === 0 && !isLoading && !isLoadingMore && (
+        <p className="text-muted-foreground">No issues currently reported or matching filter. Be the first to report an issue!</p>
       )}
 
       <div className="grid grid-cols-1 gap-6">

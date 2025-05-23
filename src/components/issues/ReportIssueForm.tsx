@@ -29,34 +29,52 @@ export default function ReportIssueForm() {
   const [timestamp, setTimestamp] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-
+  const [mapUrl, setMapUrl] = useState<string | null>(null);
+  // Removed hasCameraPermission and videoRef as they were unused.
 
   const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<ReportIssueFormValues>({
     resolver: zodResolver(reportIssueSchema),
   });
 
   useEffect(() => {
-    // Mock GPS and timestamp
-    setGpsLocation({ latitude: 34.0522, longitude: -118.2437, address: "123 Main St, Anytown, CA" });
+    const initialMockLat = 34.0522;
+    const initialMockLon = -118.2437;
+    
+    // Set initial mock location and timestamp
+    setGpsLocation({ latitude: initialMockLat, longitude: initialMockLon, address: "123 Main St, Anytown, CA" });
     setTimestamp(new Date().toLocaleString());
+    // Set initial map URL based on mock data, will be overwritten by real GPS if available
+    setMapUrl(`https://www.openstreetmap.org/export/embed.html?layer=mapnik&marker=${initialMockLat},${initialMockLon}#map=16/${initialMockLat}/${initialMockLon}`);
 
-    // Attempt to get real GPS if permission is granted
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setGpsLocation({ latitude: position.coords.latitude, longitude: position.coords.longitude });
-          // In a real app, you'd use a reverse geocoding service here
-          // For now, keep the mock address or set to coords.
-          setGpsLocation(prev => ({...prev, address: `Lat: ${position.coords.latitude.toFixed(4)}, Lon: ${position.coords.longitude.toFixed(4)}`}))
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          setGpsLocation({ latitude: lat, longitude: lon, address: `Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}` });
+          // Update map URL with real coordinates
+          setMapUrl(`https://www.openstreetmap.org/export/embed.html?layer=mapnik&marker=${lat},${lon}#map=16/${lat}/${lon}`);
         },
-        () => {
-          console.warn("Geolocation permission denied or unavailable. Using mock data.");
+        (error) => {
+          console.warn("Geolocation permission denied or unavailable. Using mock data.", error);
+          toast({
+            title: "Location Error",
+            description: "Could not access your location. Displaying default map.",
+            variant: "destructive"
+          });
+          // Stick with the initial mock map/location if permission denied.
         }
       );
+    } else {
+      console.warn("Geolocation not supported by this browser. Using mock data.");
+      toast({
+        title: "Location Not Supported",
+        description: "Geolocation is not supported by your browser. Displaying default map.",
+        variant: "destructive"
+      });
+      // Stick with the initial mock map/location if geolocation not supported.
     }
-  }, []);
+  }, [toast]);
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -92,13 +110,18 @@ export default function ReportIssueForm() {
       if (result.success) {
         toast({
           title: "Issue Reported Successfully!",
-          description: `Type: ${result.aiAnalysis?.issueType}, Severity: ${result.aiAnalysis?.severity}`,
+          // description: `Type: ${result.aiAnalysis?.issueType}, Severity: ${result.aiAnalysis?.severity}`, // AI Analysis part commented out in actions.ts
+           description: `Issue ID: ${result.issueId}. Thank you for your report.`,
         });
         reset();
         setImagePreview(null);
-        // Reset mock GPS and timestamp after successful submission
-        setGpsLocation({ latitude: 34.0522, longitude: -118.2437, address: "123 Main St, Anytown, CA" });
+        // Reset GPS, timestamp and map to initial mock state after successful submission
+        const initialMockLat = 34.0522;
+        const initialMockLon = -118.2437;
+        setGpsLocation({ latitude: initialMockLat, longitude: initialMockLon, address: "123 Main St, Anytown, CA" });
         setTimestamp(new Date().toLocaleString());
+        setMapUrl(`https://www.openstreetmap.org/export/embed.html?layer=mapnik&marker=${initialMockLat},${initialMockLon}#map=16/${initialMockLat}/${initialMockLon}`);
+
       } else {
         throw new Error(result.error || "Failed to report issue.");
       }
@@ -153,15 +176,37 @@ export default function ReportIssueForm() {
             )}
           </div>
           
-          <div className="space-y-3 text-sm text-muted-foreground">
-            <div className="flex items-center">
-              <MapPin className="h-4 w-4 mr-2 text-primary" />
-              <span>{gpsLocation.latitude ? `${gpsLocation.address || `Lat: ${gpsLocation.latitude.toFixed(4)}, Lon: ${gpsLocation.longitude.toFixed(4)}`}` : 'Fetching location...'}</span>
+          <div className="space-y-4">
+            <Label className="font-semibold">Location Details</Label>
+            <div className="space-y-2 text-sm text-muted-foreground">
+                <div className="flex items-center">
+                <MapPin className="h-4 w-4 mr-2 text-primary flex-shrink-0" />
+                <span className="truncate">{gpsLocation.latitude ? `${gpsLocation.address || `Lat: ${gpsLocation.latitude.toFixed(4)}, Lon: ${gpsLocation.longitude.toFixed(4)}`}` : 'Fetching location...'}</span>
+                </div>
+                <div className="flex items-center">
+                <Clock className="h-4 w-4 mr-2 text-primary flex-shrink-0" />
+                <span>{timestamp || 'Loading timestamp...'}</span>
+                </div>
             </div>
-            <div className="flex items-center">
-              <Clock className="h-4 w-4 mr-2 text-primary" />
-              <span>{timestamp || 'Loading timestamp...'}</span>
-            </div>
+            
+            {mapUrl ? (
+              <div className="border rounded-md overflow-hidden aspect-video shadow">
+                <iframe
+                  width="100%"
+                  height="100%"
+                  frameBorder="0"
+                  scrolling="no"
+                  src={mapUrl}
+                  title="Issue Location Map"
+                  className="rounded-md"
+                  loading="lazy"
+                ></iframe>
+              </div>
+            ) : (
+              <div className="p-4 border rounded-md text-muted-foreground text-center bg-muted/50">
+                Map preview will appear here once location is determined.
+              </div>
+            )}
           </div>
           
           <Button type="submit" className="w-full" disabled={isSubmitting}>

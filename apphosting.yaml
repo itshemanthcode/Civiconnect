@@ -4,4 +4,24 @@
 runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
-  maxInstances: 1
+  maxInstances: 3 # Increased from 1 for better scalability
+  minInstances: 0 # Optional: set to 0 to scale down to zero during no traffic
+  cpu: 1          # Default CPU
+  memoryMiB: 512  # Default memory
+  concurrency: 80 # Default concurrency
+
+# healthChecks: # Optional health check configuration
+  # livenessCheck:
+    # path: "/liveness"
+    # initialDelaySeconds: 0 # Default is 0
+    # periodSeconds: 10 # Default is 10
+    # timeoutSeconds: 1 # Default is 1
+    # failureThreshold: 2 # Default is 2
+    # successThreshold: 1 # Default is 1
+  # readinessCheck:
+    # path: "/readiness"
+    # initialDelaySeconds: 0 # Default is 0
+    # periodSeconds: 10 # Default is 10
+    # timeoutSeconds: 1 # Default is 1
+    # failureThreshold: 2 # Default is 2
+    # successThreshold: 1 # Default is 1

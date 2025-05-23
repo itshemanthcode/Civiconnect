@@ -9,97 +9,119 @@ body {
 
 @layer base {
   :root {
-    --background: 40 100% 97%; /* Soft Cream */
-    --foreground: 215 25% 30%; /* Dark Blue-Gray */
+    /* Dark Theme with Red & Black Gradients */
+    --background-start-rgb: 10, 10, 10; /* Near Black */
+    --background-end-rgb: 40, 0, 0; /* Dark Red */
+    --background: linear-gradient(135deg, rgb(var(--background-start-rgb)) 0%, rgb(var(--background-end-rgb)) 100%);
+    --foreground: 210 40% 98%; /* Light Cool White */
 
-    --card: 0 0% 100%; /* White */
-    --card-foreground: 215 25% 30%;
+    --card-bg-rgb: 25, 25, 25; /* Dark Gray for Cards */
+    --card: hsla(0, 0%, 10%, 0.85); /* Semi-transparent dark grey */
+    --card-foreground: 210 40% 95%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 30%;
+    --popover-bg-rgb: 30, 30, 30;
+    --popover: hsl(0, 0%, 12%);
+    --popover-foreground: 210 40% 95%;
 
-    --primary: 170 70% 45%; /* Vibrant Teal */
+    --primary: 0 75% 55%; /* Vibrant Red */
     --primary-foreground: 0 0% 100%; /* White */
 
-    --secondary: 170 40% 90%; /* Lighter Teal */
-    --secondary-foreground: 170 70% 35%; /* Darker Teal */
+    --secondary-bg-rgb: 60, 60, 60;
+    --secondary: hsl(0, 0%, 25%); /* Medium Gray */
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 40 50% 94%; /* Slightly Darker Cream */
-    --muted-foreground: 215 15% 50%; /* Medium Blue-Gray */
+    --muted-bg-rgb: 45, 45, 45;
+    --muted: hsl(0, 0%, 18%); /* Darker Gray */
+    --muted-foreground: 210 30% 70%; /* Lighter Gray */
 
-    --accent: 30 90% 60%; /* Warm Orange */
-    --accent-foreground: 0 0% 100%; /* White */
+    --accent: 0 80% 65%; /* Brighter Red for Accents */
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 40 20% 88%; /* Light Cream Border */
-    --input: 40 20% 92%; /* Slightly Darker Cream for Input */
-    --ring: 170 70% 45%; /* Primary Teal for Focus Rings */
+    --border-rgb: 80, 80, 80;
+    --border: hsl(0, 0%, 30%); /* Gray Border */
+    --input-bg-rgb: 50, 50, 50;
+    --input: hsl(0, 0%, 20%); /* Dark Gray for Input */
+    --ring: 0 75% 60%; /* Red for Focus Rings */
 
     --radius: 0.5rem;
 
-    --chart-1: 170 70% 55%; /* Teal variant */
-    --chart-2: 30 85% 65%;  /* Orange variant */
-    --chart-3: 200 70% 50%; /* Blue variant */
-    --chart-4: 45 70% 50%;  /* Yellow-Orange variant */
+    --chart-1: 0 70% 60%;   /* Red variant */
+    --chart-2: 210 70% 60%; /* Blue variant */
+    --chart-3: 120 60% 50%; /* Green variant */
+    --chart-4: 45 70% 60%;  /* Orange variant */
     --chart-5: 280 60% 60%; /* Purple variant */
 
-    /* Sidebar variables - updated for new theme */
-    --sidebar-background: 40 100% 98%; /* Very Light Cream, slightly lighter than main bg */
-    --sidebar-foreground: 215 25% 35%;
-    --sidebar-primary: 170 70% 40%; /* Main Teal */
+    /* Sidebar variables - dark theme */
+    --sidebar-background-start-rgb: 15,15,15;
+    --sidebar-background-end-rgb: 35,5,5;
+    --sidebar-background: linear-gradient(135deg, rgb(var(--sidebar-background-start-rgb)) 0%, rgb(var(--sidebar-background-end-rgb)) 100%);
+    --sidebar-foreground: 210 35% 90%;
+    --sidebar-primary: 0 70% 50%; /* Red for sidebar primary */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 170 40% 92%; /* Lighter Teal for sidebar accent */
-    --sidebar-accent-foreground: 170 70% 30%;
-    --sidebar-border: 40 20% 85%;
-    --sidebar-ring: 170 70% 45%;
+    --sidebar-accent: hsl(0, 0%, 22%); /* Dark accent for sidebar */
+    --sidebar-accent-foreground: 0 0% 90%;
+    --sidebar-border: hsl(0, 0%, 25%);
+    --sidebar-ring: 0 75% 60%;
   }
 
   .dark {
-    --background: 220 15% 12%; /* Dark Blue-Gray */
-    --foreground: 30 100% 96%; /* Very Light Warm Off-White */
+    /* Using the same dark theme for .dark for simplicity with red/black */
+    --background-start-rgb: 10, 10, 10;
+    --background-end-rgb: 40, 0, 0;
+    --background: linear-gradient(135deg, rgb(var(--background-start-rgb)) 0%, rgb(var(--background-end-rgb)) 100%);
+    --foreground: 210 40% 98%;
 
-    --card: 220 15% 12%;
-    --card-foreground: 30 100% 96%;
+    --card-bg-rgb: 25, 25, 25;
+    --card: hsla(0, 0%, 10%, 0.85);
+    --card-foreground: 210 40% 95%;
 
-    --popover: 220 15% 12%;
-    --popover-foreground: 30 100% 96%;
+    --popover-bg-rgb: 30, 30, 30;
+    --popover: hsl(0, 0%, 12%);
+    --popover-foreground: 210 40% 95%;
 
-    --primary: 170 65% 55%; /* Brighter Teal for Dark Mode */
-    --primary-foreground: 0 0% 100%; /* White */
+    --primary: 0 75% 55%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 10% 20%; /* Darker Blue-Gray */
-    --secondary-foreground: 30 100% 90%; /* Light Warm Off-White */
+    --secondary-bg-rgb: 60, 60, 60;
+    --secondary: hsl(0, 0%, 25%);
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 220 10% 18%;
-    --muted-foreground: 30 40% 70%;
+    --muted-bg-rgb: 45, 45, 45;
+    --muted: hsl(0, 0%, 18%);
+    --muted-foreground: 210 30% 70%;
 
-    --accent: 30 80% 65%; /* Brighter Orange for Dark Mode */
+    --accent: 0 80% 65%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 70% 50%; /* Adjusted destructive for dark mode */
+    --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 220 10% 25%;
-    --input: 220 10% 22%;
-    --ring: 170 65% 55%; /* Primary Teal for Focus Rings */
+    --border-rgb: 80, 80, 80;
+    --border: hsl(0, 0%, 30%);
+    --input-bg-rgb: 50, 50, 50;
+    --input: hsl(0, 0%, 20%);
+    --ring: 0 75% 60%;
 
-    --chart-1: 170 60% 60%;
-    --chart-2: 30 75% 70%;
-    --chart-3: 200 60% 60%;
-    --chart-4: 45 65% 60%;
-    --chart-5: 280 55% 65%;
+    --chart-1: 0 70% 60%;
+    --chart-2: 210 70% 60%;
+    --chart-3: 120 60% 50%;
+    --chart-4: 45 70% 60%;
+    --chart-5: 280 60% 60%;
 
-    /* Sidebar variables - dark theme */
-    --sidebar-background: 220 10% 10%; /* Even darker for sidebar */
-    --sidebar-foreground: 30 80% 90%;
-    --sidebar-primary: 170 65% 50%; /* Teal for dark sidebar */
+     /* Sidebar variables - dark theme */
+    --sidebar-background-start-rgb: 15,15,15;
+    --sidebar-background-end-rgb: 35,5,5;
+    --sidebar-background: linear-gradient(135deg, rgb(var(--sidebar-background-start-rgb)) 0%, rgb(var(--sidebar-background-end-rgb)) 100%);
+    --sidebar-foreground: 210 35% 90%;
+    --sidebar-primary: 0 70% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 10% 18%; /* Dark accent */
-    --sidebar-accent-foreground: 30 80% 85%;
-    --sidebar-border: 220 10% 22%;
-    --sidebar-ring: 170 65% 55%;
+    --sidebar-accent: hsl(0, 0%, 22%);
+    --sidebar-accent-foreground: 0 0% 90%;
+    --sidebar-border: hsl(0, 0%, 25%);
+    --sidebar-ring: 0 75% 60%;
   }
 }
 
@@ -108,9 +130,15 @@ body {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    /* Apply the gradient background directly */
+    background: var(--background);
+    color: hsl(var(--foreground));
+    @apply text-foreground;
   }
   .metamask-container { /* Retaining this class example, though unused */
-    @apply max-w-md mx-auto bg-card shadow-xl rounded-lg;
+    @apply max-w-md mx-auto shadow-xl rounded-lg;
+    /* Ensure card styles work with the new theme */
+    background-color: hsl(var(--card));
+    color: hsl(var(--card-foreground));
   }
 }

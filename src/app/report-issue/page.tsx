@@ -1,11 +1,5 @@
 
-import dynamic from 'next/dynamic';
-
-// Dynamically import ReportIssueForm with SSR turned off
-const ReportIssueForm = dynamic(() => import('@/components/issues/ReportIssueForm'), {
-  ssr: false,
-  loading: () => <p>Loading form...</p> // Optional: add a loading state
-});
+import ReportIssueFormLoader from '@/components/issues/ReportIssueFormLoader';
 
 export default function ReportIssuePage() {
   return (
@@ -16,7 +10,7 @@ export default function ReportIssuePage() {
           Help improve your community by reporting infrastructure problems.
         </p>
       </header>
-      <ReportIssueForm />
+      <ReportIssueFormLoader />
     </div>
   );
 }

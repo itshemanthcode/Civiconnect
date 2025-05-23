@@ -1,48 +1,52 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
+import { useState, useEffect, ComponentType, Suspense } from 'react';
+// We don't import ReportIssueForm props type here to avoid pulling it into server analysis prematurely.
+// We'll assume it takes no specific props for this loader, or define a placeholder.
+interface ReportIssueFormProps {} // Placeholder for ReportIssueForm props
 
-// Dynamically import ReportIssueForm with SSR turned off
-// The component itself is named ReportIssueForm, but we assign it to a const
-// for clarity in this loader.
-const DynamicallyLoadedReportIssueForm = dynamic(() => import('@/components/issues/ReportIssueForm'), {
-  ssr: false, // This is crucial
-  loading: () => (
+const LoadingFallback = () => (
+  <div className="flex flex-col items-center justify-center p-8 text-center">
+    <p className="text-lg font-semibold text-primary mb-2">Preparing form...</p>
+    <p className="text-muted-foreground">Please wait.</p>
+  </div>
+);
+
+const DynamicImportLoadingFallback = () => (
     <div className="flex flex-col items-center justify-center p-8 text-center">
-      <p className="text-lg font-semibold text-primary mb-2">Loading form...</p>
-      <p className="text-muted-foreground">Please wait a moment.</p>
+        <p className="text-lg font-semibold text-primary mb-2">Loading form interface...</p>
+        <p className="text-muted-foreground">Please stand by.</p>
     </div>
-  ),
-});
+);
 
 export default function ReportIssueFormLoader() {
-  const [isClient, setIsClient] = useState(false);
+  // State to hold the dynamically imported component
+  const [ClientLoadedForm, setClientLoadedForm] = useState<ComponentType<ReportIssueFormProps> | null>(null);
 
   useEffect(() => {
-    // This effect runs only on the client, after the component mounts
-    setIsClient(true);
-  }, []);
+    // This effect runs only on the client, after the component mounts.
+    // We import 'next/dynamic' and then use it to load ReportIssueForm.
+    import('next/dynamic').then(mod => {
+      const dynamic = mod.default;
+      const ReportIssueForm = dynamic(() => import('@/components/issues/ReportIssueForm'), {
+        ssr: false, // Ensure it's not server-side rendered
+        loading: () => <DynamicImportLoadingFallback />, // Loading state for the dynamic import itself
+      });
+      setClientLoadedForm(() => ReportIssueForm); // Set the loaded component to state
+    });
+  }, []); // Empty dependency array ensures this runs once on mount
 
-  // Conditionally render the dynamically imported component.
-  // On the server and during the initial client render (before useEffect runs),
-  // this will render the loading fallback.
-  // After mount (isClient is true), it will render the actual form component.
-  if (!isClient) {
-    // This loading state will be shown on the server and during initial client render.
-    // It's similar to the 'loading' prop of the dynamic import but ensures
-    // DynamicallyLoadedReportIssueForm is not even in the VDOM tree initially.
-    return (
-      <div className="flex flex-col items-center justify-center p-8 text-center">
-        <p className="text-lg font-semibold text-primary mb-2">Preparing form...</p>
-        <p className="text-muted-foreground">Please wait.</p>
-      </div>
-    );
+  if (!ClientLoadedForm) {
+    // Show a generic loading fallback until the dynamic import process starts and ClientLoadedForm is set
+    return <LoadingFallback />;
   }
 
-  // Now that we're on the client and mounted, render the form.
-  // The `dynamic` import's own `loading` prop will handle the phase
-  // where `DynamicallyLoadedReportIssueForm`'s code is being fetched.
-  return <DynamicallyLoadedReportIssueForm />;
+  // Once ClientLoadedForm is available, render it.
+  // Suspense can be used as an additional layer, though `dynamic` has its own `loading`.
+  return (
+    <Suspense fallback={<DynamicImportLoadingFallback />}>
+      <ClientLoadedForm />
+    </Suspense>
+  );
 }

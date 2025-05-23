@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { MapPin, Clock, Camera, AlertTriangle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { submitIssue } from '@/app/report-issue/actions'; // Will create this action
+import { submitIssue } from '@/app/report-issue/actions'; 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 
@@ -75,59 +75,43 @@ export default function ReportIssueForm() {
 
   const onSubmit: SubmitHandler<ReportIssueFormValues> = async (data) => {
     setIsSubmitting(true);
-    console.log("Form submitted with data (submission temporarily disabled for diagnostics):", data);
     
-    // Temporarily disable actual submission to diagnose chunk loading error
-    await new Promise(resolve => setTimeout(resolve, 700)); // Simulate network delay
-    
-    toast({
-      title: "Submission Temporarily Disabled",
-      description: "This form submission is currently disabled for diagnostic purposes.",
-      variant: "default",
-    });
+    try {
+      const formData = new FormData();
+      formData.append('description', data.description);
+      if (data.image && data.image[0]) {
+        formData.append('image', data.image[0]);
+      }
+      formData.append('latitude', gpsLocation.latitude?.toString() || '');
+      formData.append('longitude', gpsLocation.longitude?.toString() || '');
+      formData.append('address', gpsLocation.address || '');
+      formData.append('timestamp', new Date().toISOString());
 
-    // Reset form state after simulated submission
-    // reset();
-    // setImagePreview(null);
-    // setGpsLocation({ latitude: 34.0522, longitude: -118.2437, address: "123 Main St, Anytown, CA" }); // Reset mock
-    // setTimestamp(new Date().toLocaleString()); // Reset timestamp
+      const result = await submitIssue(formData);
 
-    setIsSubmitting(false);
-    
-    // Original submission logic (commented out for diagnostics):
-    // try {
-    //   const formData = new FormData();
-    //   formData.append('description', data.description);
-    //   if (data.image && data.image[0]) {
-    //     formData.append('image', data.image[0]);
-    //   }
-    //   formData.append('latitude', gpsLocation.latitude?.toString() || '');
-    //   formData.append('longitude', gpsLocation.longitude?.toString() || '');
-    //   formData.append('address', gpsLocation.address || '');
-    //   formData.append('timestamp', new Date().toISOString());
-
-    //   const result = await submitIssue(formData);
-
-    //   if (result.success) {
-    //     toast({
-    //       title: "Issue Reported Successfully!",
-    //       description: `Type: ${result.aiAnalysis?.issueType}, Severity: ${result.aiAnalysis?.severity}`,
-    //     });
-    //     reset();
-    //     setImagePreview(null);
-    //   } else {
-    //     throw new Error(result.error || "Failed to report issue.");
-    //   }
-    // } catch (error) {
-    //   const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
-    //   toast({
-    //     title: "Error Reporting Issue",
-    //     description: errorMessage,
-    //     variant: "destructive",
-    //   });
-    // } finally {
-    //   setIsSubmitting(false);
-    // }
+      if (result.success) {
+        toast({
+          title: "Issue Reported Successfully!",
+          description: `Type: ${result.aiAnalysis?.issueType}, Severity: ${result.aiAnalysis?.severity}`,
+        });
+        reset();
+        setImagePreview(null);
+        // Reset mock GPS and timestamp after successful submission
+        setGpsLocation({ latitude: 34.0522, longitude: -118.2437, address: "123 Main St, Anytown, CA" });
+        setTimestamp(new Date().toLocaleString());
+      } else {
+        throw new Error(result.error || "Failed to report issue.");
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+      toast({
+        title: "Error Reporting Issue",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -157,8 +141,8 @@ export default function ReportIssueForm() {
                 id="image"
                 type="file"
                 accept="image/*"
-                {...register("image")} // register image field
-                onChange={handleImageChange} // use onChange to handle preview and set value
+                {...register("image")} 
+                onChange={handleImageChange} 
                 className="file:text-primary file:font-semibold file:mr-2"
               />
             </div>
@@ -203,4 +187,3 @@ export default function ReportIssueForm() {
     </Card>
   );
 }
-

@@ -1,3 +1,4 @@
+
 export type IssueStatus = "Reported" | "Verified" | "Notified" | "Resolved";
 
 export interface AIAnalysis {
@@ -33,4 +34,6 @@ export interface UserProfile {
   imageAiHint?: string;
   points: number;
   badges: Array<{ name: string; icon: React.ElementType; description: string }>;
+  issuesReported: number;
+  issuesVerified: number;
 }

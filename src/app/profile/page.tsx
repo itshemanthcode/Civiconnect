@@ -1,3 +1,4 @@
+
 import Image from 'next/image';
 import { mockUsers } from '@/lib/mockData';
 import type { UserProfile } from '@/types';
@@ -11,7 +12,10 @@ import { Separator } from '@/components/ui/separator';
 // Simulate fetching current user profile
 async function getCurrentUserProfile(): Promise<UserProfile | null> {
   await new Promise(resolve => setTimeout(resolve, 200));
-  return mockUsers[0] || null; // Assuming first user is the current user
+  // For this demo, we assume the first user in mockUsers is the "current" signed-in user.
+  // In a real app, this would involve authentication and fetching the actual user's data.
+  const currentUser = mockUsers.find(u => u.id === 'user1'); 
+  return currentUser || null; 
 }
 
 export default async function ProfilePage() {
@@ -84,11 +88,11 @@ export default async function ProfilePage() {
         <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-4 bg-secondary/50 rounded-lg">
                 <p className="text-sm text-muted-foreground">Issues Reported</p>
-                <p className="text-2xl font-semibold">12</p> {/* Mock data */}
+                <p className="text-2xl font-semibold">{user.issuesReported}</p>
             </div>
              <div className="p-4 bg-secondary/50 rounded-lg">
                 <p className="text-sm text-muted-foreground">Issues Verified</p>
-                <p className="text-2xl font-semibold">28</p> {/* Mock data */}
+                <p className="text-2xl font-semibold">{user.issuesVerified}</p>
             </div>
         </CardContent>
       </Card>

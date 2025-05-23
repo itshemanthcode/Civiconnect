@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { mockUsers } from '@/lib/mockData'; // Import mockUsers
 
 interface IssueDetailsCardProps {
   issue: Issue;
@@ -36,7 +37,16 @@ export default function IssueDetailsCard({ issue: initialIssue }: IssueDetailsCa
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 500));
     setIssue(prev => ({ ...prev, upvotes: prev.upvotes + 1, verifications: prev.verifications + 1 }));
-    toast({ title: "Issue Upvoted!", description: "Your vote has been counted."});
+    
+    // Increment issuesVerified count for the current user (mockUsers[0])
+    // In a real app, you would identify the current user via auth context
+    const currentUserIndex = mockUsers.findIndex(user => user.id === 'user1'); // Assuming 'user1' is Alice, the current user
+    if (currentUserIndex !== -1) {
+      mockUsers[currentUserIndex].issuesVerified += 1;
+      console.log("User issues verified count updated:", mockUsers[currentUserIndex].issuesVerified);
+    }
+
+    toast({ title: "Issue Upvoted & Verified!", description: "Your vote and verification have been counted."});
     setIsUpvoting(false);
   };
   

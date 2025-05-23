@@ -82,6 +82,7 @@ export async function submitIssue(formData: FormData): Promise<SubmitIssueResult
   }
 
   const newIssueId = `issue${Date.now()}`;
+  const currentReporterId = mockUsers[0]?.id || 'user_anon'; // Assuming mockUsers[0] is the current user
   
   let issueAiAnalysis: AIAnalysis | undefined = undefined;
   
@@ -129,18 +130,24 @@ export async function submitIssue(formData: FormData): Promise<SubmitIssueResult
     status: 'Reported',
     upvotes: 0,
     verifications: 0,
-    reporterId: mockUsers[0]?.id || 'user_anon', 
+    reporterId: currentReporterId, 
     aiAnalysis: issueAiAnalysis,
   };
 
   mockIssues.unshift(newIssue); 
 
+  // Increment issuesReported count for the current user (mockUsers[0])
+  const currentUserIndex = mockUsers.findIndex(user => user.id === currentReporterId);
+  if (currentUserIndex !== -1) {
+    mockUsers[currentUserIndex].issuesReported += 1;
+  }
+
   console.log("New issue submitted and added to mockData:", newIssue.id);
+  console.log("User issues reported count updated:", mockUsers[currentUserIndex]?.issuesReported);
+
   return { 
     success: true, 
     issueId: newIssueId,
     aiAnalysis: issueAiAnalysis,
   };
 }
-
-    

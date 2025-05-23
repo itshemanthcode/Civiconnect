@@ -1,3 +1,4 @@
+
 import type { Issue, UserProfile, IssueStatus } from '@/types';
 import { Award, ShieldCheck, Zap } from 'lucide-react';
 
@@ -13,6 +14,8 @@ export const mockUsers: UserProfile[] = [
       { name: 'Pothole Patroller', icon: Award, description: 'Reported 10+ potholes' },
       { name: 'Community Verifier', icon: ShieldCheck, description: 'Verified 20+ issues' },
     ],
+    issuesReported: 12, // Initial value
+    issuesVerified: 28, // Initial value
   },
   {
     id: 'user2',
@@ -24,6 +27,8 @@ export const mockUsers: UserProfile[] = [
     badges: [
       { name: 'Streetlight Savior', icon: Zap, description: 'Reported 5+ broken streetlights' },
     ],
+    issuesReported: 5,
+    issuesVerified: 10,
   },
 ];
 

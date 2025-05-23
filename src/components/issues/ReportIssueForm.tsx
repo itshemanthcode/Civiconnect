@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { useForm, type SubmitHandler } from 'react-hook-form';
+import { useForm, type SubmitHandler, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -10,12 +10,26 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { MapPin, Clock, Camera, AlertTriangle, Loader2, Video, UploadCloud, XCircle, FileImage } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MapPin, Clock, Camera, AlertTriangle, Loader2, UploadCloud, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { submitIssue } from '@/app/report-issue/actions';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
+const reportTypes = [
+  "Pothole",
+  "Broken Streetlight",
+  "Garbage Overflow",
+  "Damaged Signage",
+  "Water Leak",
+  "Graffiti",
+  "Tree Maintenance",
+  "Abandoned Vehicle",
+  "Other"
+] as const;
+
 const reportIssueSchema = z.object({
+  reportType: z.string().min(1, "Please select a report type."),
   description: z.string().min(10, "Description must be at least 10 characters long."),
   image: z.any().optional(), // Handles FileList or a single File
 });
@@ -35,8 +49,12 @@ export default function ReportIssueForm() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<ReportIssueFormValues>({
+  const { register, handleSubmit, control, formState: { errors }, reset, setValue, watch } = useForm<ReportIssueFormValues>({
     resolver: zodResolver(reportIssueSchema),
+    defaultValues: {
+      reportType: "",
+      description: "",
+    }
   });
 
   const currentImageValue = watch('image');
@@ -44,9 +62,9 @@ export default function ReportIssueForm() {
   useEffect(() => {
     const initialMockLat = 34.0522;
     const initialMockLon = -118.2437;
-    const defaultZoomLevel = 18;
+    const defaultZoomLevel = 18; // Increased zoom level
 
-    setGpsLocation({ latitude: initialMockLat, longitude: initialMockLon, address: "123 Main St, Anytown, CA" });
+    setGpsLocation({ latitude: initialMockLat, longitude: initialMockLon, address: "123 Main St, Anytown, CA (Mock)" });
     setTimestamp(new Date().toLocaleString());
     setMapUrl(`https://www.openstreetmap.org/export/embed.html?layer=mapnik&marker=${initialMockLat},${initialMockLon}#map=${defaultZoomLevel}/${initialMockLat}/${initialMockLon}`);
 
@@ -55,7 +73,8 @@ export default function ReportIssueForm() {
         (position) => {
           const lat = position.coords.latitude;
           const lon = position.coords.longitude;
-          setGpsLocation({ latitude: lat, longitude: lon, address: `Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}` });
+          // For demonstration, reverse geocoding would be an API call. We'll keep it simple.
+          setGpsLocation({ latitude: lat, longitude: lon, address: `Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)} (Live)` });
           setMapUrl(`https://www.openstreetmap.org/export/embed.html?layer=mapnik&marker=${lat},${lon}#map=${defaultZoomLevel}/${lat}/${lon}`);
         },
         (error) => {
@@ -65,7 +84,7 @@ export default function ReportIssueForm() {
             description: "Could not access your location. Displaying default map.",
             variant: "destructive"
           });
-          setMapUrl(`https://www.openstreetmap.org/export/embed.html?layer=mapnik&marker=${initialMockLat},${initialMockLon}#map=${defaultZoomLevel}/${initialMockLat}/${initialMockLon}`);
+           setMapUrl(`https://www.openstreetmap.org/export/embed.html?layer=mapnik&marker=${initialMockLat},${initialMockLon}#map=${defaultZoomLevel}/${initialMockLat}/${initialMockLon}`);
         }
       );
     } else {
@@ -121,9 +140,6 @@ export default function ReportIssueForm() {
       reader.readAsDataURL(file);
       setValue('image', event.target.files); // RHF expects FileList
       if (isCameraView) setIsCameraView(false); // Switch view if file is selected
-    } else {
-      // This part might not be reached if a file is simply cleared by the input
-      // clearPhoto();
     }
   };
 
@@ -144,7 +160,9 @@ export default function ReportIssueForm() {
           .then(res => res.blob())
           .then(blob => {
             const file = new File([blob], `capture-${Date.now()}.jpg`, { type: 'image/jpeg' });
-            setValue('image', file); // RHF can handle single File
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            setValue('image', dataTransfer.files); // RHF expects FileList
           });
       }
     }
@@ -152,13 +170,10 @@ export default function ReportIssueForm() {
   
   const clearPhoto = () => {
     setImagePreview(null);
-    setValue('image', null); // Clear the image in react-hook-form
+    setValue('image', null); 
     const fileInput = document.getElementById('image-input') as HTMLInputElement;
     if (fileInput) {
-        fileInput.value = ''; // Reset the file input
-    }
-    if (isCameraView && videoRef.current && videoRef.current.srcObject) {
-        // Keep camera running if in camera view
+        fileInput.value = ''; 
     }
   };
 
@@ -166,10 +181,12 @@ export default function ReportIssueForm() {
     setIsSubmitting(true);
     try {
       const formData = new FormData();
+      formData.append('reportType', data.reportType);
       formData.append('description', data.description);
       
-      // data.image could be a FileList or a single File object
-      const imageFile = data.image instanceof FileList ? data.image[0] : data.image;
+      const imageInput = data.image;
+      const imageFile = imageInput instanceof FileList ? imageInput[0] : imageInput;
+
 
       if (imageFile) {
         formData.append('image', imageFile);
@@ -184,16 +201,16 @@ export default function ReportIssueForm() {
       if (result.success) {
         toast({
           title: "Issue Reported Successfully!",
-          description: `Issue ID: ${result.issueId}. Thank you for your report. ${result.aiAnalysis ? `AI Type: ${result.aiAnalysis.issueType}, Severity: ${result.aiAnalysis.severity}` : ''}`,
+          description: `Issue ID: ${result.issueId}. Type: ${result.aiAnalysis?.issueType}. Severity: ${result.aiAnalysis?.severity}`,
         });
         reset();
         clearPhoto();
-        if (isCameraView) setIsCameraView(false); // Optionally switch back to file view
+        if (isCameraView) setIsCameraView(false); 
         
         const initialMockLat = 34.0522;
         const initialMockLon = -118.2437;
         const defaultZoomLevel = 18;
-        setGpsLocation({ latitude: initialMockLat, longitude: initialMockLon, address: "123 Main St, Anytown, CA" });
+        setGpsLocation({ latitude: initialMockLat, longitude: initialMockLon, address: "123 Main St, Anytown, CA (Mock)" });
         setTimestamp(new Date().toLocaleString());
         setMapUrl(`https://www.openstreetmap.org/export/embed.html?layer=mapnik&marker=${initialMockLat},${initialMockLon}#map=${defaultZoomLevel}/${initialMockLat}/${initialMockLon}`);
 
@@ -220,6 +237,27 @@ export default function ReportIssueForm() {
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div>
+            <Label htmlFor="reportType" className="mb-1 block">Report Type</Label>
+            <Controller
+              name="reportType"
+              control={control}
+              render={({ field }) => (
+                <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                  <SelectTrigger id="reportType" aria-invalid={errors.reportType ? "true" : "false"}>
+                    <SelectValue placeholder="Select a report type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {reportTypes.map(type => (
+                      <SelectItem key={type} value={type}>{type}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.reportType && <p className="text-sm text-destructive mt-1">{errors.reportType.message}</p>}
+          </div>
+
+          <div>
             <Label htmlFor="description" className="mb-1 block">Description</Label>
             <Textarea
               id="description"
@@ -232,7 +270,7 @@ export default function ReportIssueForm() {
           </div>
 
           <div>
-            <Label className="mb-1 block">Issue Image</Label>
+            <Label className="mb-1 block">Issue Image (Optional)</Label>
             <div className="flex space-x-2 mb-2">
                 <Button type="button" variant={isCameraView ? "secondary" : "default"} onClick={() => setIsCameraView(false)} className="flex-1">
                     <UploadCloud className="mr-2 h-4 w-4" /> Upload File
@@ -249,7 +287,7 @@ export default function ReportIssueForm() {
                   id="image-input"
                   type="file"
                   accept="image/*"
-                  {...register("image")} // Register here for file input
+                  {...register("image")} 
                   onChange={handleImageChange}
                   className="file:text-primary file:font-semibold file:mr-2"
                 />
@@ -341,7 +379,7 @@ export default function ReportIssueForm() {
           </Button>
         </form>
       </CardContent>
-       {Object.keys(errors).length > 0 && (
+       {(errors.reportType || errors.description) && (
         <CardFooter>
             <div className="text-destructive text-sm flex items-center">
                 <AlertTriangle className="h-4 w-4 mr-2" />
@@ -352,3 +390,5 @@ export default function ReportIssueForm() {
     </Card>
   );
 }
+
+    

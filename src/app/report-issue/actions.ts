@@ -4,9 +4,10 @@
 import { z } from 'zod';
 import type { Issue, AIAnalysis } from '@/types'; 
 import { mockUsers, mockIssues } from '@/lib/mockData'; 
-// import { prioritizeIssueReports, type PrioritizeIssueReportsOutput } from '@/ai/flows/prioritize-reports'; // Keep commented if causing chunk issues
+// import { prioritizeIssueReports, type PrioritizeIssueReportsOutput } from '@/ai/flows/prioritize-reports';
 
 const ReportIssueFormSchema = z.object({
+  reportType: z.string().min(1, "Report type is required."),
   description: z.string().min(10, "Description must be at least 10 characters long."),
   latitude: z.string().optional(),
   longitude: z.string().optional(),
@@ -18,7 +19,7 @@ const ReportIssueFormSchema = z.object({
 interface SubmitIssueResult {
     success: boolean;
     issueId?: string;
-    aiAnalysis?: AIAnalysis; // Keep this if prioritizeIssueReports is used, otherwise remove or make optional
+    aiAnalysis?: AIAnalysis;
     error?: string;
 }
 
@@ -31,11 +32,16 @@ async function fileToDataUri(file: File): Promise<string> {
 
 // Helper to generate AI hint from description
 function generateAiHintFromDescription(description: string): string {
-  return description.split(/\s+/).slice(0, 2).join(' ').toLowerCase() || "reported issue";
+  // Take first 1-2 words from description for the hint
+  const words = description.trim().split(/\s+/);
+  if (words.length === 1) return words[0].toLowerCase();
+  if (words.length >= 2) return `${words[0].toLowerCase()} ${words[1].toLowerCase()}`;
+  return "reported issue"; // fallback
 }
 
 export async function submitIssue(formData: FormData): Promise<SubmitIssueResult> {
   const rawFormData = {
+    reportType: formData.get('reportType'),
     description: formData.get('description'),
     latitude: formData.get('latitude'),
     longitude: formData.get('longitude'),
@@ -46,12 +52,15 @@ export async function submitIssue(formData: FormData): Promise<SubmitIssueResult
   const validation = ReportIssueFormSchema.safeParse(rawFormData);
 
   if (!validation.success) {
-    const descriptionError = validation.error.flatten().fieldErrors.description?.[0];
-    const errorMessage = descriptionError ? `Invalid description: ${descriptionError}` : "Invalid form data.";
+    const fieldErrors = validation.error.flatten().fieldErrors;
+    const errorMessage = 
+      fieldErrors.reportType?.[0] || 
+      fieldErrors.description?.[0] || 
+      "Invalid form data.";
     return { success: false, error: errorMessage };
   }
   
-  const { description, latitude, longitude, address, timestamp } = validation.data;
+  const { reportType, description, latitude, longitude, address, timestamp } = validation.data;
   const imageFile = formData.get('image') as File | null;
   
   let imageUrl: string | undefined = undefined;
@@ -60,67 +69,57 @@ export async function submitIssue(formData: FormData): Promise<SubmitIssueResult
   if (imageFile && imageFile.size > 0) {
     try {
       imageUrl = await fileToDataUri(imageFile);
-      imageAiHint = generateAiHintFromDescription(description);
+      // Generate AI hint even for uploaded images for accessibility/alt text
+      imageAiHint = generateAiHintFromDescription(description); 
     } catch (e) {
       console.error("Error converting image to Data URI:", e);
-      // Proceed without image if conversion fails, or return error
       return { success: false, error: "Failed to process uploaded image."};
     }
   } else {
     // No image uploaded, use placeholder and generate hint for AI image gen
-    imageUrl = 'https://placehold.co/600x400.png'; // Default placeholder
+    imageUrl = 'https://placehold.co/600x400.png'; 
     imageAiHint = generateAiHintFromDescription(description);
   }
 
   const newIssueId = `issue${Date.now()}`;
   
-  // --- AI Analysis (Text) ---
-  // This part can be re-enabled if the chunk loading error is resolved
-  // For now, we'll mock it or skip it if prioritizeIssueReports is commented out.
   let issueAiAnalysis: AIAnalysis | undefined = undefined;
+  
+  // Use the user-selected reportType for aiAnalysis.issueType
+  // The prioritizeIssueReports flow is commented out, so we are using mock analysis
+  issueAiAnalysis = {
+    issueType: reportType, // Use selected type
+    severity: "Medium", // Could be refined by AI later if enabled
+    priorityScore: Math.floor(Math.random() * 30) + 50, // Random score 50-80
+    reason: `Severity and priority determined by simplified mock analysis. User classified as: ${reportType}.`
+  };
   /*
+  // If prioritizeIssueReports flow was active:
   try {
-    // If prioritizeIssueReports is available and working:
-    // const aiResult = await prioritizeIssueReports({ reportText: description });
-    // issueAiAnalysis = {
-    //   issueType: aiResult.issueType,
-    //   severity: aiResult.severity,
-    //   priorityScore: aiResult.priorityScore,
-    //   reason: aiResult.reason,
-    // };
-
-    // Mock analysis if prioritizeIssueReports is commented out:
+    const aiResult = await prioritizeIssueReports({ reportText: description });
     issueAiAnalysis = {
-      issueType: "General Report (Mock)",
-      severity: "Medium (Mock)",
-      priorityScore: 50,
-      reason: "AI text analysis is currently in simplified mode."
+      issueType: aiResult.issueType, // AI could confirm or refine user's type
+      severity: aiResult.severity,
+      priorityScore: aiResult.priorityScore,
+      reason: aiResult.reason,
     };
   } catch (error) {
     console.error("Error getting AI analysis for issue text:", error);
     // Fallback if AI analysis fails
     issueAiAnalysis = {
-      issueType: "Uncategorized",
+      issueType: reportType, // Fallback to user selected type
       severity: "Unknown",
       priorityScore: 0,
-      reason: "AI analysis failed or was not run."
+      reason: "AI analysis failed. User classified as: " + reportType
     };
   }
   */
-  // Simplified mock analysis:
-   issueAiAnalysis = {
-      issueType: description.split(" ")[0] || "Issue", // Simple type from first word
-      severity: "Medium",
-      priorityScore: Math.floor(Math.random() * 30) + 50, // Random score 50-80
-      reason: "Severity and priority determined by simplified mock analysis."
-    };
-
 
   const newIssue: Issue = {
     id: newIssueId,
     description,
     imageUrl,
-    imageAiHint,
+    imageAiHint, // Store the hint
     timestamp: timestamp || new Date().toISOString(),
     gpsLocation: {
       latitude: parseFloat(latitude || '0'),
@@ -130,11 +129,11 @@ export async function submitIssue(formData: FormData): Promise<SubmitIssueResult
     status: 'Reported',
     upvotes: 0,
     verifications: 0,
-    reporterId: mockUsers[0]?.id || 'user_anon', // Default to first mock user or anonymous
+    reporterId: mockUsers[0]?.id || 'user_anon', 
     aiAnalysis: issueAiAnalysis,
   };
 
-  mockIssues.unshift(newIssue); // Add to the beginning of the array
+  mockIssues.unshift(newIssue); 
 
   console.log("New issue submitted and added to mockData:", newIssue.id);
   return { 
@@ -143,3 +142,5 @@ export async function submitIssue(formData: FormData): Promise<SubmitIssueResult
     aiAnalysis: issueAiAnalysis,
   };
 }
+
+    

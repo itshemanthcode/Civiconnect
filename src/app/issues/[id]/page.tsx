@@ -5,12 +5,26 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { generateIssueImage } from '@/ai/flows/generate-issue-image-flow';
 
-// Simulate fetching a single issue by ID
-async function getIssueById(id: string): Promise<Issue | null> {
+// Simulate fetching a single issue by ID and generate image if it's a placeholder
+async function getIssueByIdWithGeneratedImage(id: string): Promise<Issue | null> {
   await new Promise(resolve => setTimeout(resolve, 300)); // Simulate API delay
-  const issue = mockIssues.find(issue => issue.id === id);
-  return issue || null;
+  let issue = mockIssues.find(issue => issue.id === id) || null;
+
+  if (issue && issue.imageUrl && issue.imageUrl.startsWith('https://placehold.co') && issue.imageAiHint) {
+    try {
+      // console.log(`Details Page: Generating image for hint: ${issue.imageAiHint}`);
+      const imageResult = await generateIssueImage({ prompt: issue.imageAiHint });
+      if (imageResult.imageDataUri) {
+        issue = { ...issue, imageUrl: imageResult.imageDataUri };
+      }
+    } catch (error) {
+      console.error(`Details Page: Failed to generate image for '${issue.imageAiHint}':`, error);
+      // Keep placeholder if generation fails
+    }
+  }
+  return issue;
 }
 
 interface IssueDetailsPageProps {
@@ -18,7 +32,7 @@ interface IssueDetailsPageProps {
 }
 
 export default async function IssueDetailsPage({ params }: IssueDetailsPageProps) {
-  const issue = await getIssueById(params.id);
+  const issue = await getIssueByIdWithGeneratedImage(params.id);
 
   if (!issue) {
     return (

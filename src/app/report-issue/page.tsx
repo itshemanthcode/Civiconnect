@@ -1,7 +1,7 @@
 
-"use client"; // Make the page itself a client component
+"use client";
 
-import ReportIssueFormLoader from '@/components/issues/ReportIssueFormLoader';
+import ReportIssueForm from '@/components/issues/ReportIssueForm';
 
 export default function ReportIssuePage() {
   return (
@@ -12,7 +12,7 @@ export default function ReportIssuePage() {
           Help improve your community by reporting infrastructure problems.
         </p>
       </header>
-      <ReportIssueFormLoader />
+      <ReportIssueForm />
     </div>
   );
 }

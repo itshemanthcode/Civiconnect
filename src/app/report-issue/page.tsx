@@ -1,4 +1,6 @@
 
+"use client"; // Make the page itself a client component
+
 import ReportIssueFormLoader from '@/components/issues/ReportIssueFormLoader';
 
 export default function ReportIssuePage() {

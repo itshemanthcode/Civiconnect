@@ -39,7 +39,7 @@ export default function ReportIssueForm() {
   useEffect(() => {
     const initialMockLat = 34.0522;
     const initialMockLon = -118.2437;
-    const defaultZoomLevel = 18; // Increased zoom level
+    const defaultZoomLevel = 18; 
     
     // Set initial mock location and timestamp
     setGpsLocation({ latitude: initialMockLat, longitude: initialMockLon, address: "123 Main St, Anytown, CA" });
@@ -121,7 +121,7 @@ export default function ReportIssueForm() {
         // Reset GPS, timestamp and map to initial mock state after successful submission
         const initialMockLat = 34.0522;
         const initialMockLon = -118.2437;
-        const defaultZoomLevel = 18; // Ensure reset uses the new zoom level
+        const defaultZoomLevel = 18; 
         setGpsLocation({ latitude: initialMockLat, longitude: initialMockLon, address: "123 Main St, Anytown, CA" });
         setTimestamp(new Date().toLocaleString());
         setMapUrl(`https://www.openstreetmap.org/export/embed.html?layer=mapnik&marker=${initialMockLat},${initialMockLon}#map=${defaultZoomLevel}/${initialMockLat}/${initialMockLon}`);
@@ -182,6 +182,7 @@ export default function ReportIssueForm() {
           
           <div className="space-y-4">
             <Label className="font-semibold">Location Details</Label>
+            <p className="text-xs text-muted-foreground -mt-1 mb-2">Location is based on your browser/device. Accuracy may vary.</p>
             <div className="space-y-2 text-sm text-muted-foreground">
                 <div className="flex items-center">
                 <MapPin className="h-4 w-4 mr-2 text-primary flex-shrink-0" />

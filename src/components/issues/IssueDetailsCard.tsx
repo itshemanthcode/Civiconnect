@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Issue } from '@/types';
@@ -6,10 +7,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import StatusBadge from './StatusBadge';
-import { ThumbsUp, MapPin, Clock, UserCircle2, Brain, BarChart3, FileText, Lightbulb } from 'lucide-react';
+import { ThumbsUp, MapPin, Clock, UserCircle2, Brain, BarChart3, FileText, Lightbulb, Loader2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 interface IssueDetailsCardProps {
@@ -19,7 +20,16 @@ interface IssueDetailsCardProps {
 export default function IssueDetailsCard({ issue: initialIssue }: IssueDetailsCardProps) {
   const [issue, setIssue] = useState(initialIssue);
   const [isUpvoting, setIsUpvoting] = useState(false);
+  const [clientFormattedTimestamp, setClientFormattedTimestamp] = useState<string | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Format timestamp on the client after hydration
+    if (initialIssue.timestamp) {
+      setClientFormattedTimestamp(format(new Date(initialIssue.timestamp), "MMMM d, yyyy 'at' h:mm a"));
+    }
+  }, [initialIssue.timestamp]);
+
 
   const handleUpvote = async () => {
     setIsUpvoting(true);
@@ -30,7 +40,6 @@ export default function IssueDetailsCard({ issue: initialIssue }: IssueDetailsCa
     setIsUpvoting(false);
   };
   
-  const formattedTimestamp = format(new Date(issue.timestamp), "MMMM d, yyyy 'at' h:mm a");
 
   return (
     <Card className="w-full overflow-hidden">
@@ -52,7 +61,9 @@ export default function IssueDetailsCard({ issue: initialIssue }: IssueDetailsCa
           <StatusBadge status={issue.status} />
         </div>
         <CardDescription className="flex flex-col space-y-1 text-xs text-muted-foreground pt-1">
-           <span className="flex items-center"><Clock className="h-3.5 w-3.5 mr-1.5" /> Reported: {formattedTimestamp}</span>
+           <span className="flex items-center">
+             <Clock className="h-3.5 w-3.5 mr-1.5" /> Reported: {clientFormattedTimestamp || 'Loading date...'}
+           </span>
            <span className="flex items-center"><MapPin className="h-3.5 w-3.5 mr-1.5" /> Location: {issue.gpsLocation.address || `Lat: ${issue.gpsLocation.latitude.toFixed(3)}, Lon: ${issue.gpsLocation.longitude.toFixed(3)}`}</span>
            <span className="flex items-center"><UserCircle2 className="h-3.5 w-3.5 mr-1.5" /> Reporter ID: {issue.reporterId}</span>
         </CardDescription>

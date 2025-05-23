@@ -39,12 +39,13 @@ export default function ReportIssueForm() {
   useEffect(() => {
     const initialMockLat = 34.0522;
     const initialMockLon = -118.2437;
+    const defaultZoomLevel = 18; // Increased zoom level
     
     // Set initial mock location and timestamp
     setGpsLocation({ latitude: initialMockLat, longitude: initialMockLon, address: "123 Main St, Anytown, CA" });
     setTimestamp(new Date().toLocaleString());
     // Set initial map URL based on mock data, will be overwritten by real GPS if available
-    setMapUrl(`https://www.openstreetmap.org/export/embed.html?layer=mapnik&marker=${initialMockLat},${initialMockLon}#map=16/${initialMockLat}/${initialMockLon}`);
+    setMapUrl(`https://www.openstreetmap.org/export/embed.html?layer=mapnik&marker=${initialMockLat},${initialMockLon}#map=${defaultZoomLevel}/${initialMockLat}/${initialMockLon}`);
 
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -53,7 +54,7 @@ export default function ReportIssueForm() {
           const lon = position.coords.longitude;
           setGpsLocation({ latitude: lat, longitude: lon, address: `Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}` });
           // Update map URL with real coordinates
-          setMapUrl(`https://www.openstreetmap.org/export/embed.html?layer=mapnik&marker=${lat},${lon}#map=16/${lat}/${lon}`);
+          setMapUrl(`https://www.openstreetmap.org/export/embed.html?layer=mapnik&marker=${lat},${lon}#map=${defaultZoomLevel}/${lat}/${lon}`);
         },
         (error) => {
           console.warn("Geolocation permission denied or unavailable. Using mock data.", error);
@@ -63,6 +64,7 @@ export default function ReportIssueForm() {
             variant: "destructive"
           });
           // Stick with the initial mock map/location if permission denied.
+          setMapUrl(`https://www.openstreetmap.org/export/embed.html?layer=mapnik&marker=${initialMockLat},${initialMockLon}#map=${defaultZoomLevel}/${initialMockLat}/${initialMockLon}`);
         }
       );
     } else {
@@ -73,6 +75,7 @@ export default function ReportIssueForm() {
         variant: "destructive"
       });
       // Stick with the initial mock map/location if geolocation not supported.
+      setMapUrl(`https://www.openstreetmap.org/export/embed.html?layer=mapnik&marker=${initialMockLat},${initialMockLon}#map=${defaultZoomLevel}/${initialMockLat}/${initialMockLon}`);
     }
   }, [toast]);
 
@@ -105,22 +108,23 @@ export default function ReportIssueForm() {
       formData.append('address', gpsLocation.address || '');
       formData.append('timestamp', new Date().toISOString());
 
+      // Re-enable the actual submitIssue call
       const result = await submitIssue(formData);
 
       if (result.success) {
         toast({
           title: "Issue Reported Successfully!",
-          // description: `Type: ${result.aiAnalysis?.issueType}, Severity: ${result.aiAnalysis?.severity}`, // AI Analysis part commented out in actions.ts
-           description: `Issue ID: ${result.issueId}. Thank you for your report.`,
+          description: `Issue ID: ${result.issueId}. Thank you for your report. ${result.aiAnalysis ? `AI Type: ${result.aiAnalysis.issueType}, Severity: ${result.aiAnalysis.severity}` : '(AI analysis pending/failed)'}`,
         });
         reset();
         setImagePreview(null);
         // Reset GPS, timestamp and map to initial mock state after successful submission
         const initialMockLat = 34.0522;
         const initialMockLon = -118.2437;
+        const defaultZoomLevel = 18; // Ensure reset uses the new zoom level
         setGpsLocation({ latitude: initialMockLat, longitude: initialMockLon, address: "123 Main St, Anytown, CA" });
         setTimestamp(new Date().toLocaleString());
-        setMapUrl(`https://www.openstreetmap.org/export/embed.html?layer=mapnik&marker=${initialMockLat},${initialMockLon}#map=16/${initialMockLat}/${initialMockLon}`);
+        setMapUrl(`https://www.openstreetmap.org/export/embed.html?layer=mapnik&marker=${initialMockLat},${initialMockLon}#map=${defaultZoomLevel}/${initialMockLat}/${initialMockLon}`);
 
       } else {
         throw new Error(result.error || "Failed to report issue.");
@@ -232,3 +236,4 @@ export default function ReportIssueForm() {
     </Card>
   );
 }
+

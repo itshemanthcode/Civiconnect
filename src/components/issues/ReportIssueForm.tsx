@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -12,6 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { MapPin, Clock, Camera, AlertTriangle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { submitIssue } from '@/app/report-issue/actions'; // Will create this action
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
 
 const reportIssueSchema = z.object({
   description: z.string().min(10, "Description must be at least 10 characters long."),
@@ -26,8 +29,11 @@ export default function ReportIssueForm() {
   const [timestamp, setTimestamp] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
-  const { register, handleSubmit, formState: { errors }, reset } = useForm<ReportIssueFormValues>({
+
+  const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<ReportIssueFormValues>({
     resolver: zodResolver(reportIssueSchema),
   });
 
@@ -60,48 +66,68 @@ export default function ReportIssueForm() {
         setImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
+      setValue('image', event.target.files);
     } else {
       setImagePreview(null);
+      setValue('image', null);
     }
   };
 
   const onSubmit: SubmitHandler<ReportIssueFormValues> = async (data) => {
     setIsSubmitting(true);
-    try {
-      const formData = new FormData();
-      formData.append('description', data.description);
-      if (data.image && data.image[0]) {
-        formData.append('image', data.image[0]);
-      }
-      // Append GPS and timestamp if needed by the action, or it can derive them
-      formData.append('latitude', gpsLocation.latitude?.toString() || '');
-      formData.append('longitude', gpsLocation.longitude?.toString() || '');
-      formData.append('address', gpsLocation.address || '');
-      formData.append('timestamp', new Date().toISOString());
+    console.log("Form submitted with data (submission temporarily disabled for diagnostics):", data);
+    
+    // Temporarily disable actual submission to diagnose chunk loading error
+    await new Promise(resolve => setTimeout(resolve, 700)); // Simulate network delay
+    
+    toast({
+      title: "Submission Temporarily Disabled",
+      description: "This form submission is currently disabled for diagnostic purposes.",
+      variant: "default",
+    });
 
+    // Reset form state after simulated submission
+    // reset();
+    // setImagePreview(null);
+    // setGpsLocation({ latitude: 34.0522, longitude: -118.2437, address: "123 Main St, Anytown, CA" }); // Reset mock
+    // setTimestamp(new Date().toLocaleString()); // Reset timestamp
 
-      const result = await submitIssue(formData);
+    setIsSubmitting(false);
+    
+    // Original submission logic (commented out for diagnostics):
+    // try {
+    //   const formData = new FormData();
+    //   formData.append('description', data.description);
+    //   if (data.image && data.image[0]) {
+    //     formData.append('image', data.image[0]);
+    //   }
+    //   formData.append('latitude', gpsLocation.latitude?.toString() || '');
+    //   formData.append('longitude', gpsLocation.longitude?.toString() || '');
+    //   formData.append('address', gpsLocation.address || '');
+    //   formData.append('timestamp', new Date().toISOString());
 
-      if (result.success) {
-        toast({
-          title: "Issue Reported Successfully!",
-          description: `Type: ${result.aiAnalysis?.issueType}, Severity: ${result.aiAnalysis?.severity}`,
-        });
-        reset();
-        setImagePreview(null);
-      } else {
-        throw new Error(result.error || "Failed to report issue.");
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
-      toast({
-        title: "Error Reporting Issue",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    //   const result = await submitIssue(formData);
+
+    //   if (result.success) {
+    //     toast({
+    //       title: "Issue Reported Successfully!",
+    //       description: `Type: ${result.aiAnalysis?.issueType}, Severity: ${result.aiAnalysis?.severity}`,
+    //     });
+    //     reset();
+    //     setImagePreview(null);
+    //   } else {
+    //     throw new Error(result.error || "Failed to report issue.");
+    //   }
+    // } catch (error) {
+    //   const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+    //   toast({
+    //     title: "Error Reporting Issue",
+    //     description: errorMessage,
+    //     variant: "destructive",
+    //   });
+    // } finally {
+    //   setIsSubmitting(false);
+    // }
   };
 
   return (
@@ -131,18 +157,18 @@ export default function ReportIssueForm() {
                 id="image"
                 type="file"
                 accept="image/*"
-                {...register("image")}
-                onChange={handleImageChange}
+                {...register("image")} // register image field
+                onChange={handleImageChange} // use onChange to handle preview and set value
                 className="file:text-primary file:font-semibold file:mr-2"
               />
             </div>
             {imagePreview && (
                 <div className="mt-2 border rounded-md p-2">
-                    <img src={imagePreview} alt="Preview" className="max-h-40 rounded-md mx-auto" />
+                    <img src={imagePreview} alt="Preview" className="max-h-40 rounded-md mx-auto" data-ai-hint="issue image preview" />
                 </div>
             )}
           </div>
-
+          
           <div className="space-y-3 text-sm text-muted-foreground">
             <div className="flex items-center">
               <MapPin className="h-4 w-4 mr-2 text-primary" />
@@ -177,3 +203,4 @@ export default function ReportIssueForm() {
     </Card>
   );
 }
+

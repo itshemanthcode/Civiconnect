@@ -19,6 +19,10 @@ declare global {
   interface Window {
     recaptchaVerifier?: RecaptchaVerifier;
     confirmationResult?: ConfirmationResult;
+    grecaptcha?: {
+      reset: (widgetId?: number) => void;
+      // Add other grecaptcha methods if needed
+    };
   }
 }
 
@@ -30,26 +34,26 @@ export default function PhoneEntryPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && auth) { // Ensure auth is initialized
+    if (typeof window !== 'undefined' && auth) { 
       if (!window.recaptchaVerifier) {
-        // Ensure the container exists and is visible
         const recaptchaContainer = document.getElementById('recaptcha-container');
         if (recaptchaContainer) {
-            // Option 1: Visible reCAPTCHA
              window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-               'size': 'normal', // 'invisible' is also an option but needs to be tied to button click
+               'size': 'normal', 
                'callback': (response: any) => {
-                 // reCAPTCHA solved, allow signInWithPhoneNumber.
                  console.log("reCAPTCHA solved:", response);
                },
                'expired-callback': () => {
-                 // Response expired. Ask user to solve reCAPTCHA again.
                  toast({ title: "reCAPTCHA Expired", description: "Please solve the reCAPTCHA again.", variant: "destructive"});
-                 window.recaptchaVerifier?.render().then((widgetId) => {
-                    if (typeof grecaptcha !== 'undefined' && grecaptcha.reset) {
-                        grecaptcha.reset(widgetId);
+                 if (window.recaptchaVerifier) {
+                    const widgetId = (window.recaptchaVerifier as any).widgetId;
+                    if (typeof window.grecaptcha !== 'undefined' && window.grecaptcha.reset && widgetId !== undefined) {
+                        window.grecaptcha.reset(widgetId);
+                    } else {
+                        // Fallback if widgetId is not directly accessible or grecaptcha not fully loaded
+                        window.recaptchaVerifier.render().catch(console.error);
                     }
-                 });
+                 }
                }
              });
              window.recaptchaVerifier.render().catch(error => {
@@ -62,15 +66,37 @@ export default function PhoneEntryPage() {
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth, toast]); // Add toast to dependencies
+  }, [auth, toast]); 
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let inputValue = e.target.value;
+  
+    // Allow '+' only at the beginning, and only digits otherwise
+    if (inputValue.startsWith('+')) {
+      // Allow user to type their own country code, ensure rest are digits
+      inputValue = '+' + inputValue.substring(1).replace(/[^\d]/g, '');
+    } else {
+      // If no '+', strip all non-digits
+      inputValue = inputValue.replace(/[^\d]/g, '');
+    }
+    
+    // If the input becomes 10 digits long, doesn't start with '+', 
+    // and looks like a typical Indian mobile number (starts with 6,7,8, or 9)
+    if (!inputValue.startsWith('+') && inputValue.length === 10 && /^[6-9]\d{9}$/.test(inputValue)) {
+      setPhone('+91' + inputValue);
+    } else {
+      // Otherwise, update with the cleaned input
+      setPhone(inputValue);
+    }
+  };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    // Basic E.164 format validation (adjust regex as needed for your specific country codes)
+    // Final validation for E.164 format before submitting
     if (!phone.match(/^\+[1-9]\d{1,14}$/)) {
       toast({
         title: "Invalid Phone Number",
-        description: "Please enter a valid phone number in E.164 format (e.g., +19876543210).",
+        description: "Please enter a valid phone number in E.164 format (e.g., +919876543210).",
         variant: "destructive",
       });
       return;
@@ -86,8 +112,8 @@ export default function PhoneEntryPage() {
     try {
       const appVerifier = window.recaptchaVerifier;
       const confirmation = await signInWithPhoneNumber(auth, phone, appVerifier);
-      setConfirmationResult(confirmation); // Store confirmation result in context
-      setPhoneNumber(phone); // Store phone number in context
+      setConfirmationResult(confirmation); 
+      setPhoneNumber(phone); 
       
       toast({
         title: "OTP Sent",
@@ -100,11 +126,9 @@ export default function PhoneEntryPage() {
       if (error.code === 'auth/too-many-requests') {
         errorMessage = "Too many requests. Please try again later.";
       } else if (error.code === 'auth/invalid-phone-number') {
-        errorMessage = "Invalid phone number provided.";
-      } else if (error.code === 'auth/captcha-check-failed') {
+        errorMessage = "Invalid phone number provided to Firebase.";
+      } else if (error.code === 'auth/captcha-check-failed' || error.message?.includes('reCAPTCHA')) {
         errorMessage = "reCAPTCHA verification failed. Please try again.";
-      } else if (error.message?.includes('reCAPTCHA')) {
-        errorMessage = "reCAPTCHA error. Please ensure it's configured correctly or try again.";
       }
       
       toast({
@@ -112,15 +136,14 @@ export default function PhoneEntryPage() {
         description: errorMessage,
         variant: "destructive",
       });
-      // Reset reCAPTCHA if it exists and an error occurred
-      if (window.recaptchaVerifier && typeof grecaptcha !== 'undefined' && grecaptcha.reset) {
+      
+      if (window.recaptchaVerifier && typeof window.grecaptcha !== 'undefined' && window.grecaptcha.reset) {
         try {
-            const widgetId = (window.recaptchaVerifier as any).widgetId; // Accessing widgetId if available
+            const widgetId = (window.recaptchaVerifier as any).widgetId; 
             if (widgetId !== undefined) {
-               grecaptcha.reset(widgetId);
+               window.grecaptcha.reset(widgetId);
             } else {
-                // Fallback if widgetId is not directly accessible, try to re-render
-                window.recaptchaVerifier.clear(); // Clear previous instance
+                window.recaptchaVerifier.clear(); 
                 await window.recaptchaVerifier.render();
             }
         } catch (rcError) {
@@ -140,7 +163,7 @@ export default function PhoneEntryPage() {
             <Logo />
           </div>
           <CardTitle className="text-2xl">Verify Your Phone</CardTitle>
-          <CardDescription>Enter your phone number (e.g., +1XXXYYYZZZZ) to receive a verification code.</CardDescription>
+          <CardDescription>Enter your phone number (e.g., +91XXXXXXXXXX) to receive a verification code.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -151,9 +174,9 @@ export default function PhoneEntryPage() {
                 <Input
                   id="phone"
                   type="tel"
-                  placeholder="e.g., +19876543210"
+                  placeholder="e.g., +919876543210 or 9876543210"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={handlePhoneChange}
                   required
                   className="pl-10"
                 />

@@ -38,35 +38,49 @@ export default function PhoneEntryPage() {
       if (!window.recaptchaVerifier) {
         const recaptchaContainer = document.getElementById('recaptcha-container');
         if (recaptchaContainer) {
+             console.log("Initializing reCAPTCHA verifier...");
              window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-               'size': 'normal', 
+               'size': 'normal', // 'invisible' can also be used, but 'normal' provides more feedback
                'callback': (response: any) => {
                  console.log("reCAPTCHA solved:", response);
+                 // reCAPTCHA solved, user can now submit phone number.
+                 // You could enable the submit button here if it was initially disabled.
                },
                'expired-callback': () => {
+                 console.warn("reCAPTCHA expired callback triggered.");
                  toast({ title: "reCAPTCHA Expired", description: "Please solve the reCAPTCHA again.", variant: "destructive"});
                  if (window.recaptchaVerifier) {
                     const widgetId = (window.recaptchaVerifier as any).widgetId;
                     if (typeof window.grecaptcha !== 'undefined' && window.grecaptcha.reset && widgetId !== undefined) {
+                        console.log("Resetting reCAPTCHA widget:", widgetId);
                         window.grecaptcha.reset(widgetId);
                     } else {
+                        console.warn("Could not reset reCAPTCHA widget, attempting full re-render.");
                         // Fallback if widgetId is not directly accessible or grecaptcha not fully loaded
-                        window.recaptchaVerifier.render().catch(console.error);
+                        window.recaptchaVerifier.render().catch(renderError => {
+                            console.error("Error re-rendering reCAPTCHA after expiry:", renderError);
+                        });
                     }
                  }
                }
              });
              window.recaptchaVerifier.render().catch(error => {
                 console.error("Error rendering reCAPTCHA:", error);
-                toast({ title: "reCAPTCHA Error", description: "Could not render reCAPTCHA. Ensure it is enabled for your Firebase project and domain.", variant: "destructive" });
+                toast({ 
+                    title: "reCAPTCHA Error", 
+                    description: "Could not render reCAPTCHA. Ensure it's configured correctly in your Firebase project and your domain is authorized. Check console for more details.", 
+                    variant: "destructive",
+                    duration: 10000 // Longer duration for critical errors
+                });
              });
         } else {
-            console.error("reCAPTCHA container not found")
+            console.error("reCAPTCHA container element (id='recaptcha-container') not found in the DOM.");
+            toast({ title: "Setup Error", description: "reCAPTCHA container not found. Please contact support.", variant: "destructive" });
         }
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth, toast]); 
+  }, [auth, toast]); // Dependency array is correct as auth and toast are stable or handled by their providers
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let inputValue = e.target.value;
@@ -92,6 +106,7 @@ export default function PhoneEntryPage() {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    console.log("Attempting to send OTP to:", phone);
     // Final validation for E.164 format before submitting
     if (!phone.match(/^\+[1-9]\d{1,14}$/)) {
       toast({
@@ -104,50 +119,81 @@ export default function PhoneEntryPage() {
     setIsLoading(true);
 
     if (!window.recaptchaVerifier) {
-      toast({ title: "reCAPTCHA Error", description: "reCAPTCHA not initialized. Please wait or refresh.", variant: "destructive"});
+      toast({ title: "reCAPTCHA Error", description: "reCAPTCHA not initialized. Please wait or refresh the page.", variant: "destructive"});
       setIsLoading(false);
       return;
     }
 
     try {
       const appVerifier = window.recaptchaVerifier;
+      console.log("Using App Verifier:", appVerifier);
       const confirmation = await signInWithPhoneNumber(auth, phone, appVerifier);
+      console.log("signInWithPhoneNumber successful, confirmationResult:", confirmation);
       setConfirmationResult(confirmation); 
       setPhoneNumber(phone); 
       
       toast({
-        title: "OTP Sent",
-        description: `An OTP has been sent to ${phone}.`,
+        title: "OTP Sent Successfully!",
+        description: `An OTP has been sent to ${phone}. Please check your SMS.`,
       });
       router.push('/verify/otp');
     } catch (error: any) {
       console.error("Error sending OTP with Firebase:", error);
-      let errorMessage = "Failed to send OTP. Please try again.";
-      if (error.code === 'auth/too-many-requests') {
-        errorMessage = "Too many requests. Please try again later.";
-      } else if (error.code === 'auth/invalid-phone-number') {
-        errorMessage = "Invalid phone number provided to Firebase.";
-      } else if (error.code === 'auth/captcha-check-failed' || error.message?.includes('reCAPTCHA')) {
-        errorMessage = "reCAPTCHA verification failed. Please try again.";
+      let errorMessage = "Failed to send OTP. Please try again. Check console for details.";
+      
+      if (error.code) {
+        switch (error.code) {
+          case 'auth/too-many-requests':
+            errorMessage = "Too many requests. Please try again later or contact support if this persists.";
+            break;
+          case 'auth/invalid-phone-number':
+            errorMessage = "The phone number you entered is invalid. Please check and try again (e.g., +12223334444).";
+            break;
+          case 'auth/captcha-check-failed':
+            errorMessage = "reCAPTCHA verification failed. Please try solving it again.";
+            break;
+          case 'auth/missing-phone-number':
+             errorMessage = "Phone number is missing. Please enter your phone number.";
+            break;
+          case 'auth/quota-exceeded':
+             errorMessage = "OTP quota exceeded for this project. Please contact support or try again later.";
+            break;
+          case 'auth/user-disabled':
+             errorMessage = "This account has been disabled.";
+            break;
+          case 'auth/operation-not-allowed':
+             errorMessage = "Phone number sign-in is not enabled for this Firebase project.";
+            toast({ title: "Configuration Error", description: errorMessage, variant: "destructive", duration: 10000 });
+            setIsLoading(false);
+            return; // Critical config error
+          default:
+            errorMessage = `An unexpected error occurred: ${error.message} (Code: ${error.code})`;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
       }
       
       toast({
         title: "OTP Sending Failed",
         description: errorMessage,
         variant: "destructive",
+        duration: 8000 // Longer duration for errors
       });
       
+      // Attempt to reset reCAPTCHA on failure
       if (window.recaptchaVerifier && typeof window.grecaptcha !== 'undefined' && window.grecaptcha.reset) {
         try {
             const widgetId = (window.recaptchaVerifier as any).widgetId; 
             if (widgetId !== undefined) {
+               console.log("Resetting reCAPTCHA widget after error:", widgetId);
                window.grecaptcha.reset(widgetId);
             } else {
+                console.warn("Could not get reCAPTCHA widgetId for reset, attempting clear and re-render.");
                 window.recaptchaVerifier.clear(); 
                 await window.recaptchaVerifier.render();
             }
         } catch (rcError) {
-            console.error("Error resetting reCAPTCHA:", rcError);
+            console.error("Error resetting reCAPTCHA after submission error:", rcError);
         }
       }
     } finally {
@@ -200,3 +246,5 @@ export default function PhoneEntryPage() {
     </div>
   );
 }
+
+    

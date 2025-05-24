@@ -21,7 +21,7 @@ export default function PhoneEntryPage() {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!phone.match(/^\d{10,15}$/)) { // Basic phone number validation (10-15 digits)
+    if (!phone.match(/^\d{10,15}$/)) {
       toast({
         title: "Invalid Phone Number",
         description: "Please enter a valid phone number (10-15 digits).",
@@ -31,18 +31,39 @@ export default function PhoneEntryPage() {
     }
     setIsLoading(true);
     
-    // Simulate API call to send OTP
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    setPhoneNumber(phone); // Store phone number in context/localStorage
+    try {
+      const response = await fetch('/api/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber: phone }),
+      });
 
-    toast({
-      title: "OTP Sent (Simulated)",
-      description: `An OTP has been "sent" to ${phone}. Please use 123456 to verify.`,
-    });
+      const data = await response.json();
 
-    router.push('/verify/otp');
-    setIsLoading(false);
+      if (response.ok && data.success) {
+        setPhoneNumber(phone); // Store phone number in context/localStorage
+        toast({
+          title: "OTP Sent (Simulated)",
+          description: data.message, // Message from API
+        });
+        router.push('/verify/otp');
+      } else {
+        toast({
+          title: "Failed to Send OTP",
+          description: data.message || "An unexpected error occurred. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error sending OTP:", error);
+      toast({
+        title: "Network Error",
+        description: "Could not connect to the server. Please check your internet connection.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

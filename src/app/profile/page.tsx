@@ -1,28 +1,61 @@
 
+"use client"; // Make this a client component to use hooks
+
 import Image from 'next/image';
 import { mockUsers } from '@/lib/mockData';
 import type { UserProfile } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, Edit3, LogOut, Settings, Star } from 'lucide-react';
+import { CheckCircle2, Edit3, LogOut, Settings, Star, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/contexts/AuthContext'; // Import useAuth
+import { useEffect, useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
-// Simulate fetching current user profile
+// Simulate fetching current user profile (remains an async function if called server-side, but here it's illustrative)
 async function getCurrentUserProfile(): Promise<UserProfile | null> {
   await new Promise(resolve => setTimeout(resolve, 200));
-  // For this demo, we assume the first user in mockUsers is the "current" signed-in user.
-  // In a real app, this would involve authentication and fetching the actual user's data.
   const currentUser = mockUsers.find(u => u.id === 'user1'); 
   return currentUser || null; 
 }
 
-export default async function ProfilePage() {
-  const user = await getCurrentUserProfile();
+export default function ProfilePage() {
+  const { logout } = useAuth(); // Get logout function from context
+  const { toast } = useToast();
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      setIsLoading(true);
+      const userProfile = await getCurrentUserProfile();
+      setUser(userProfile);
+      setIsLoading(false);
+    };
+    fetchUser();
+  }, []);
+
+  const handleLogout = () => {
+    logout();
+    toast({
+      title: "Logged Out",
+      description: "You have been successfully logged out.",
+    });
+    // AppStructureClient will handle redirecting to /verify/phone
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[calc(100vh-200px)]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (!user) {
-    return <p>User not found.</p>;
+    return <p className="text-center text-muted-foreground">User not found.</p>;
   }
 
   return (
@@ -74,7 +107,7 @@ export default async function ProfilePage() {
             <Button variant="outline" className="w-full sm:w-auto">
                 <Settings className="mr-2 h-4 w-4" /> Account Settings
             </Button>
-             <Button variant="destructive" className="w-full sm:w-auto sm:ml-auto">
+             <Button variant="destructive" className="w-full sm:w-auto sm:ml-auto" onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" /> Log Out
             </Button>
         </CardFooter>
@@ -100,3 +133,4 @@ export default async function ProfilePage() {
     </div>
   );
 }
+

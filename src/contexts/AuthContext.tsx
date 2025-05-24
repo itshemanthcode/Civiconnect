@@ -9,6 +9,7 @@ interface AuthContextType {
   setIsVerified: (verified: boolean) => void;
   phoneNumber: string | null;
   setPhoneNumber: (phone: string | null) => void;
+  logout: () => void; // Added logout function
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,7 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsVerifiedState(verified);
     localStorage.setItem('isCivicConnectVerified', verified.toString());
     if (!verified) {
-      // Clear phone number if un-verifying
+      // Clear phone number if un-verifying (also handled by logout)
       localStorage.removeItem('civicConnectPhoneNumber');
       setPhoneNumberState(null);
     }
@@ -45,9 +46,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const logout = () => {
+    setIsVerifiedState(false);
+    setPhoneNumberState(null);
+    localStorage.removeItem('isCivicConnectVerified');
+    localStorage.removeItem('civicConnectPhoneNumber');
+    // The AppStructureClient will handle redirection to /verify/phone
+  };
+
 
   return (
-    <AuthContext.Provider value={{ isVerified, setIsVerified, phoneNumber, setPhoneNumber }}>
+    <AuthContext.Provider value={{ isVerified, setIsVerified, phoneNumber, setPhoneNumber, logout }}>
       {children}
     </AuthContext.Provider>
   );
@@ -60,3 +69,4 @@ export function useAuth() {
   }
   return context;
 }
+

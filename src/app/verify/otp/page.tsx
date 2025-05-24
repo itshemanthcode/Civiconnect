@@ -16,59 +16,66 @@ import Link from 'next/link';
 export default function OtpVerifyPage() {
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isResendingOtp, setIsResendingOtp] = useState(false);
+  // const [isResendingOtp, setIsResendingOtp] = useState(false); // Resend logic needs to be Firebase compatible
   const router = useRouter();
-  const { setIsVerified, phoneNumber } = useAuth(); // phoneNumber comes from context
+  const { setIsVerified, phoneNumber, confirmationResult, firebaseUser } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!phoneNumber) {
+    if (firebaseUser) { // If already logged in via Firebase (e.g. page refresh after login)
+        setIsVerified(true);
+        router.replace('/');
+    } else if (!confirmationResult && !phoneNumber) { // If no confirmationResult and no phone number, something went wrong
       toast({
-        title: "Phone number missing",
-        description: "Please enter your phone number first.",
+        title: "Verification Error",
+        description: "Could not find phone number or verification session. Please start over.",
         variant: "destructive",
       });
       router.replace('/verify/phone');
     }
-  }, [phoneNumber, router, toast]);
+  }, [confirmationResult, phoneNumber, router, toast, firebaseUser, setIsVerified]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsLoading(true);
 
-    if (!phoneNumber) {
-      toast({ title: "Error", description: "Phone number not found.", variant: "destructive" });
+    if (!confirmationResult) {
+      toast({ title: "Error", description: "Verification session not found. Please try sending OTP again.", variant: "destructive" });
       setIsLoading(false);
+      router.replace('/verify/phone');
       return;
+    }
+    if (!otp || otp.length !== 6) {
+        toast({ title: "Invalid OTP", description: "Please enter a 6-digit OTP.", variant: "destructive"});
+        setIsLoading(false);
+        return;
     }
 
     try {
-      const response = await fetch('/api/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber, otp }),
+      await confirmationResult.confirm(otp);
+      // User is signed in with Firebase at this point.
+      // onAuthStateChanged in AuthContext will update firebaseUser and isVerified.
+      toast({
+        title: "Verification Successful!",
+        description: "You have successfully verified your phone number.",
       });
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        setIsVerified(true);
-        toast({
-          title: "Verification Successful!",
-          description: data.message || "You can now access CivicConnect.",
-        });
-        router.replace('/'); 
-      } else {
-        toast({
-          title: "Verification Failed",
-          description: data.message || "Invalid or expired OTP. Please try again.",
-          variant: "destructive",
-        });
+      // AppStructureClient will redirect to '/' if isVerified becomes true.
+      // Explicit redirect can be a fallback or for immediate navigation.
+      router.replace('/'); 
+    } catch (error: any) {
+      console.error("Error verifying OTP with Firebase:", error);
+      let errorMessage = "Invalid or expired OTP. Please try again.";
+       if (error.code === 'auth/invalid-verification-code') {
+        errorMessage = "Invalid OTP. Please check the code and try again.";
+      } else if (error.code === 'auth/code-expired') {
+        errorMessage = "OTP has expired. Please request a new one.";
+      } else if (error.code === 'auth/session-expired') {
+        errorMessage = "Verification session has expired. Please request a new OTP.";
+         router.replace('/verify/phone');
       }
-    } catch (error) {
-      console.error("Error verifying OTP:", error);
-       toast({
-        title: "Network Error",
-        description: "Could not connect to the server. Please check your internet connection.",
+      toast({
+        title: "Verification Failed",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -76,45 +83,13 @@ export default function OtpVerifyPage() {
     }
   };
   
-  const handleResendOtp = async () => {
-    if (!phoneNumber) {
-      toast({ title: "Error", description: "Phone number not found to resend OTP.", variant: "destructive" });
-      return;
-    }
-    setIsResendingOtp(true);
-    try {
-      const response = await fetch('/api/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber }),
-      });
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        toast({
-          title: "OTP Resent (Simulated)",
-          description: data.message || `A new OTP has been "sent" to ${phoneNumber}.`,
-        });
-      } else {
-        toast({
-          title: "Failed to Resend OTP",
-          description: data.message || "An error occurred. Please try again.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error("Error resending OTP:", error);
-      toast({
-        title: "Network Error",
-        description: "Could not resend OTP. Please check your connection.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsResendingOtp(false);
-    }
+  // Resend OTP logic needs to re-trigger signInWithPhoneNumber with a new reCAPTCHA.
+  // This is more complex and for simplicity, we will ask user to go back.
+  const handleGoBackToResend = () => {
+    router.replace('/verify/phone');
   };
 
-  if (!phoneNumber) {
+  if (!phoneNumber && !confirmationResult && !firebaseUser) { // Show loader if initial checks are pending
     return (
         <div className="flex items-center justify-center min-h-screen bg-background p-4">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -131,7 +106,7 @@ export default function OtpVerifyPage() {
           </div>
           <CardTitle className="text-2xl">Enter Verification Code</CardTitle>
           <CardDescription>
-            A 6-digit code was "sent" to <span className="font-semibold">{phoneNumber}</span>.
+            A 6-digit code was sent to <span className="font-semibold">{phoneNumber || "your phone"}</span>.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -153,7 +128,7 @@ export default function OtpVerifyPage() {
                 />
               </div>
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading || isResendingOtp}>
+            <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isLoading ? 'Verifying...' : 'Verify OTP'}
             </Button>
@@ -162,9 +137,8 @@ export default function OtpVerifyPage() {
         <CardFooter className="flex flex-col items-center space-y-3">
           <p className="text-sm text-muted-foreground">
             Didn&apos;t receive the code?{' '}
-            <Button variant="link" className="p-0 h-auto" onClick={handleResendOtp} disabled={isLoading || isResendingOtp}>
-              {isResendingOtp ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : null}
-              {isResendingOtp ? 'Resending...' : 'Resend Code'}
+            <Button variant="link" className="p-0 h-auto" onClick={handleGoBackToResend} disabled={isLoading}>
+              Request new code
             </Button>
           </p>
            <Link href="/verify/phone" className="text-sm text-primary hover:underline">

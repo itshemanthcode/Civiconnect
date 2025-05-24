@@ -9,42 +9,42 @@ body {
 
 @layer base {
   :root {
-    /* Dark Theme with Red & Black Gradients */
+    /* Dark Theme with Deep Red & Black Gradients - Refined for Realism */
     --background-start-rgb: 10, 10, 10; /* Near Black */
-    --background-end-rgb: 40, 0, 0; /* Dark Red */
-    --background: linear-gradient(135deg, rgb(var(--background-start-rgb)) 0%, rgb(var(--background-end-rgb)) 100%);
-    --foreground: 210 40% 98%; /* Light Cool White */
+    --background-end-rgb: 30, 0, 0; /* Deeper Dark Red for a more subtle gradient */
+    --background: linear-gradient(145deg, rgb(var(--background-start-rgb)) 0%, rgb(var(--background-end-rgb)) 100%);
+    --foreground: 210 40% 98%; /* Light Cool White - good contrast */
 
-    --card-bg-rgb: 25, 25, 25; /* Dark Gray for Cards */
-    --card: hsla(0, 0%, 10%, 0.85); /* Semi-transparent dark grey */
-    --card-foreground: 210 40% 95%;
+    --card-bg-rgb: 20, 20, 20; /* Slightly darker base for cards */
+    --card: hsla(0, 0%, 8%, 0.92); /* Darker, more opaque card background */
+    --card-foreground: 210 40% 96%; /* Slightly adjusted for clarity on darker card */
 
-    --popover-bg-rgb: 30, 30, 30;
-    --popover: hsl(0, 0%, 12%);
-    --popover-foreground: 210 40% 95%;
+    --popover-bg-rgb: 25, 25, 25;
+    --popover: hsla(0, 0%, 10%, 0.95); /* Dark, slightly transparent popover */
+    --popover-foreground: 210 40% 96%;
 
-    --primary: 0 75% 55%; /* Vibrant Red */
+    --primary: 0 75% 55%; /* Vibrant Red - kept for impact */
     --primary-foreground: 0 0% 100%; /* White */
 
-    --secondary-bg-rgb: 60, 60, 60;
-    --secondary: hsl(0, 0%, 25%); /* Medium Gray */
-    --secondary-foreground: 0 0% 100%;
+    --secondary-bg-rgb: 50, 50, 50;
+    --secondary: hsl(0, 0%, 20%); /* Darker Gray for secondary elements */
+    --secondary-foreground: 0 0% 95%; /* Lighter foreground for secondary */
 
-    --muted-bg-rgb: 45, 45, 45;
-    --muted: hsl(0, 0%, 18%); /* Darker Gray */
-    --muted-foreground: 210 30% 70%; /* Lighter Gray */
+    --muted-bg-rgb: 40, 40, 40;
+    --muted: hsl(0, 0%, 15%); /* Even Darker Gray for muted elements */
+    --muted-foreground: 210 30% 75%; /* Slightly brighter muted foreground */
 
-    --accent: 0 80% 65%; /* Brighter Red for Accents */
+    --accent: 0 80% 60%; /* Slightly adjusted Bright Red for Accents */
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 70% 50%;
+    --destructive: 0 65% 50%; /* Adjusted destructive red */
     --destructive-foreground: 0 0% 98%;
 
-    --border-rgb: 80, 80, 80;
-    --border: hsl(0, 0%, 30%); /* Gray Border */
-    --input-bg-rgb: 50, 50, 50;
-    --input: hsl(0, 0%, 20%); /* Dark Gray for Input */
-    --ring: 0 75% 60%; /* Red for Focus Rings */
+    --border-rgb: 60, 60, 60;
+    --border: hsl(0, 0%, 22%); /* Darker, less saturated border */
+    --input-bg-rgb: 38, 38, 38;
+    --input: hsl(0, 0%, 15%); /* Dark Gray for Input, distinct from card */
+    --ring: 0 75% 60%; /* Red for Focus Rings - kept */
 
     --radius: 0.5rem;
 
@@ -54,55 +54,55 @@ body {
     --chart-4: 45 70% 60%;  /* Orange variant */
     --chart-5: 280 60% 60%; /* Purple variant */
 
-    /* Sidebar variables - dark theme */
-    --sidebar-background-start-rgb: 15,15,15;
-    --sidebar-background-end-rgb: 35,5,5;
-    --sidebar-background: linear-gradient(135deg, rgb(var(--sidebar-background-start-rgb)) 0%, rgb(var(--sidebar-background-end-rgb)) 100%);
-    --sidebar-foreground: 210 35% 90%;
+    /* Sidebar variables - refined dark theme */
+    --sidebar-background-start-rgb: 10,10,10; /* Darker sidebar start */
+    --sidebar-background-end-rgb: 25,0,0; /* Deeper red end for sidebar */
+    --sidebar-background: linear-gradient(145deg, rgb(var(--sidebar-background-start-rgb)) 0%, rgb(var(--sidebar-background-end-rgb)) 100%);
+    --sidebar-foreground: 210 35% 92%; /* Slightly brighter sidebar foreground */
     --sidebar-primary: 0 70% 50%; /* Red for sidebar primary */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: hsl(0, 0%, 22%); /* Dark accent for sidebar */
-    --sidebar-accent-foreground: 0 0% 90%;
-    --sidebar-border: hsl(0, 0%, 25%);
+    --sidebar-accent: hsl(0, 0%, 18%); /* Dark accent for sidebar hover */
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: hsl(0, 0%, 20%); /* Consistent darker border for sidebar */
     --sidebar-ring: 0 75% 60%;
   }
 
   .dark {
-    /* Using the same dark theme for .dark for simplicity with red/black */
+    /* Using the same refined dark theme for .dark for consistency */
     --background-start-rgb: 10, 10, 10;
-    --background-end-rgb: 40, 0, 0;
-    --background: linear-gradient(135deg, rgb(var(--background-start-rgb)) 0%, rgb(var(--background-end-rgb)) 100%);
+    --background-end-rgb: 30, 0, 0;
+    --background: linear-gradient(145deg, rgb(var(--background-start-rgb)) 0%, rgb(var(--background-end-rgb)) 100%);
     --foreground: 210 40% 98%;
 
-    --card-bg-rgb: 25, 25, 25;
-    --card: hsla(0, 0%, 10%, 0.85);
-    --card-foreground: 210 40% 95%;
+    --card-bg-rgb: 20, 20, 20;
+    --card: hsla(0, 0%, 8%, 0.92);
+    --card-foreground: 210 40% 96%;
 
-    --popover-bg-rgb: 30, 30, 30;
-    --popover: hsl(0, 0%, 12%);
-    --popover-foreground: 210 40% 95%;
+    --popover-bg-rgb: 25, 25, 25;
+    --popover: hsla(0, 0%, 10%, 0.95);
+    --popover-foreground: 210 40% 96%;
 
     --primary: 0 75% 55%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary-bg-rgb: 60, 60, 60;
-    --secondary: hsl(0, 0%, 25%);
-    --secondary-foreground: 0 0% 100%;
+    --secondary-bg-rgb: 50, 50, 50;
+    --secondary: hsl(0, 0%, 20%);
+    --secondary-foreground: 0 0% 95%;
 
-    --muted-bg-rgb: 45, 45, 45;
-    --muted: hsl(0, 0%, 18%);
-    --muted-foreground: 210 30% 70%;
+    --muted-bg-rgb: 40, 40, 40;
+    --muted: hsl(0, 0%, 15%);
+    --muted-foreground: 210 30% 75%;
 
-    --accent: 0 80% 65%;
+    --accent: 0 80% 60%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 70% 50%;
+    --destructive: 0 65% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border-rgb: 80, 80, 80;
-    --border: hsl(0, 0%, 30%);
-    --input-bg-rgb: 50, 50, 50;
-    --input: hsl(0, 0%, 20%);
+    --border-rgb: 60, 60, 60;
+    --border: hsl(0, 0%, 22%);
+    --input-bg-rgb: 38, 38, 38;
+    --input: hsl(0, 0%, 15%);
     --ring: 0 75% 60%;
 
     --chart-1: 0 70% 60%;
@@ -111,16 +111,16 @@ body {
     --chart-4: 45 70% 60%;
     --chart-5: 280 60% 60%;
 
-     /* Sidebar variables - dark theme */
-    --sidebar-background-start-rgb: 15,15,15;
-    --sidebar-background-end-rgb: 35,5,5;
-    --sidebar-background: linear-gradient(135deg, rgb(var(--sidebar-background-start-rgb)) 0%, rgb(var(--sidebar-background-end-rgb)) 100%);
-    --sidebar-foreground: 210 35% 90%;
+     /* Sidebar variables - refined dark theme */
+    --sidebar-background-start-rgb: 10,10,10;
+    --sidebar-background-end-rgb: 25,0,0;
+    --sidebar-background: linear-gradient(145deg, rgb(var(--sidebar-background-start-rgb)) 0%, rgb(var(--sidebar-background-end-rgb)) 100%);
+    --sidebar-foreground: 210 35% 92%;
     --sidebar-primary: 0 70% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: hsl(0, 0%, 22%);
-    --sidebar-accent-foreground: 0 0% 90%;
-    --sidebar-border: hsl(0, 0%, 25%);
+    --sidebar-accent: hsl(0, 0%, 18%);
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: hsl(0, 0%, 20%);
     --sidebar-ring: 0 75% 60%;
   }
 }

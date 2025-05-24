@@ -8,7 +8,7 @@ import Header from '@/components/layout/Header';
 import BottomNav from '@/components/layout/BottomNav';
 import { Loader2 } from 'lucide-react';
 
-const AUTH_ROUTES = ['/verify/phone', '/verify/otp', '/auth/signin']; // Existing signin kept accessible
+const AUTH_ROUTES = ['/verify/phone', '/verify/otp', '/auth/signin'];
 
 export default function AppStructureClient({ children }: { children: React.ReactNode }) {
   const { isVerified } = useAuth();
@@ -25,9 +25,11 @@ export default function AppStructureClient({ children }: { children: React.React
 
     if (!isVerified && !isAuthRoute) {
       router.replace('/verify/phone');
-    } else if (isVerified && (pathname === '/verify/phone' || pathname === '/verify/otp')) {
-      // If verified and on a verification page, redirect to home
-      router.replace('/');
+    } else if (isVerified) {
+      // If verified and on any OTP verification page or the sign-in page, redirect to home
+      if (pathname === '/verify/phone' || pathname === '/verify/otp' || pathname === '/auth/signin') {
+        router.replace('/');
+      }
     }
   }, [isVerified, pathname, router]);
 
@@ -41,13 +43,16 @@ export default function AppStructureClient({ children }: { children: React.React
 
   const isAuthPageLayout = AUTH_ROUTES.includes(pathname);
 
+  // If on an auth route (like /verify/phone, /verify/otp, or /auth/signin) AND not yet OTP verified,
+  // render the page content directly without the main app layout.
+  // The useEffect will handle redirects if needed (e.g. verified user trying to access /auth/signin).
   if (isAuthPageLayout && !isVerified) {
-    // For phone/otp verification pages or signin page when not yet verified via OTP
     return <>{children}</>;
   }
   
+  // If not verified and not on an auth route, user should be redirected by useEffect.
+  // This is a fallback display while redirect is pending.
   if (!isVerified && !isAuthPageLayout) {
-     // This case should be handled by the redirect, but as a fallback, show loader or minimal content
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -56,33 +61,34 @@ export default function AppStructureClient({ children }: { children: React.React
     );
   }
 
-
-  // Verified user or on sign-in page (even if not OTP verified yet)
-  if (isVerified || pathname === '/auth/signin') {
-      const showMainLayout = !AUTH_ROUTES.some(route => pathname.startsWith(route)) || (pathname === '/auth/signin' && isVerified);
-      // Simplified logic: if it's /auth/signin, it uses its own layout.
-      // If it's /verify/* and user is NOT verified, it uses its own layout (handled above).
-      // Otherwise, if verified, use main app layout.
-
-      if (pathname === '/verify/phone' || pathname === '/verify/otp') {
-        // Should have been redirected if verified, or handled by `isAuthPageLayout && !isVerified`
-        // This path is mostly for when `isVerified` becomes true and redirect is pending.
-        return <>{children}</>;
-      }
-
-
-     return (
-        <div className="flex flex-col flex-grow max-w-2xl w-full mx-auto bg-card shadow-lg">
-          <Header />
-          <main className="flex-grow overflow-y-auto p-4 pb-20">
-            {children}
-          </main>
-          <BottomNav />
-        </div>
-      );
+  // If execution reaches here, the user is OTP verified (and not on an auth page they should be redirected from)
+  // OR they are on /auth/signin (which will be redirected by useEffect if they are verified).
+  // In either case, if not redirected, show the main app layout.
+  if (isVerified) {
+     // If OTP verified and on an OTP page, useEffect handles redirect.
+     // For other pages, show main layout.
+     // This condition implicitly means `pathname` is not `/verify/phone` or `/verify/otp` or `/auth/signin` if `isVerified` is true,
+     // because the `useEffect` would have redirected.
+     if (pathname !== '/verify/phone' && pathname !== '/verify/otp' && pathname !== '/auth/signin') {
+        return (
+            <div className="flex flex-col flex-grow max-w-2xl w-full mx-auto bg-card shadow-lg">
+              <Header />
+              <main className="flex-grow overflow-y-auto p-4 pb-20">
+                {children}
+              </main>
+              <BottomNav />
+            </div>
+        );
+     }
+     // If on /auth/signin and verified, useEffect will redirect. While redirecting, show minimal content.
+     // Same for /verify/* pages if somehow reached while verified before redirect.
+     return <>{children}</>; 
   }
   
-  // Default fallback, should ideally not be reached if logic above is correct
+  // Fallback for any other unhandled cases (e.g., if on /auth/signin and not verified, handled by the first return).
+  // This primarily covers the case where `pathname === '/auth/signin'` and `isVerified` is false,
+  // which is already handled by `isAuthPageLayout && !isVerified`.
+  // This default fallback is more of a safety net.
   return (
      <div className="flex items-center justify-center min-h-screen bg-background">
         <p className="text-muted-foreground">Loading application...</p>

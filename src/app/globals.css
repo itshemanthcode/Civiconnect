@@ -9,119 +9,119 @@ body {
 
 @layer base {
   :root {
-    /* Dark Theme with Deep Red & Black Gradients - Refined for Realism */
+    /* Green & Black Gradient Theme */
     --background-start-rgb: 10, 10, 10; /* Near Black */
-    --background-end-rgb: 30, 0, 0; /* Deeper Dark Red for a more subtle gradient */
+    --background-end-rgb: 0, 25, 10; /* Very Dark Desaturated Green */
     --background: linear-gradient(145deg, rgb(var(--background-start-rgb)) 0%, rgb(var(--background-end-rgb)) 100%);
-    --foreground: 210 40% 98%; /* Light Cool White - good contrast */
+    --foreground: 200 20% 96%; /* Light Cool White - good contrast */
 
-    --card-bg-rgb: 20, 20, 20; /* Slightly darker base for cards */
-    --card: hsla(0, 0%, 8%, 0.92); /* Darker, more opaque card background */
-    --card-foreground: 210 40% 96%; /* Slightly adjusted for clarity on darker card */
+    --card-bg-rgb: 15, 20, 15; /* Dark base for cards, slight green tint */
+    --card: hsla(130, 15%, 7%, 0.92); /* Darker, more opaque card background */
+    --card-foreground: 200 20% 94%; /* Slightly adjusted for clarity on darker card */
 
-    --popover-bg-rgb: 25, 25, 25;
-    --popover: hsla(0, 0%, 10%, 0.95); /* Dark, slightly transparent popover */
-    --popover-foreground: 210 40% 96%;
+    --popover-bg-rgb: 20, 25, 20;
+    --popover: hsla(130, 10%, 8%, 0.95); /* Dark, slightly transparent popover */
+    --popover-foreground: 200 20% 94%;
 
-    --primary: 0 75% 55%; /* Vibrant Red - kept for impact */
-    --primary-foreground: 0 0% 100%; /* White */
+    --primary: 145 65% 45%; /* Vibrant Green */
+    --primary-foreground: 200 0% 100%; /* White */
 
-    --secondary-bg-rgb: 50, 50, 50;
-    --secondary: hsl(0, 0%, 20%); /* Darker Gray for secondary elements */
-    --secondary-foreground: 0 0% 95%; /* Lighter foreground for secondary */
+    --secondary-bg-rgb: 40, 50, 40;
+    --secondary: hsl(130, 10%, 18%); /* Darker Green/Gray for secondary elements */
+    --secondary-foreground: 200 15% 90%; /* Lighter foreground for secondary */
 
-    --muted-bg-rgb: 40, 40, 40;
-    --muted: hsl(0, 0%, 15%); /* Even Darker Gray for muted elements */
-    --muted-foreground: 210 30% 75%; /* Slightly brighter muted foreground */
+    --muted-bg-rgb: 30, 40, 30;
+    --muted: hsl(130, 10%, 14%); /* Even Darker Green/Gray for muted elements */
+    --muted-foreground: 200 25% 70%; /* Slightly brighter muted foreground */
 
-    --accent: 0 80% 60%; /* Slightly adjusted Bright Red for Accents */
-    --accent-foreground: 0 0% 100%;
+    --accent: 140 55% 55%; /* Slightly brighter/different Green for Accents */
+    --accent-foreground: 200 0% 100%;
 
-    --destructive: 0 65% 50%; /* Adjusted destructive red */
+    --destructive: 0 65% 50%; /* Red for destructive actions - maintained for clarity */
     --destructive-foreground: 0 0% 98%;
 
-    --border-rgb: 60, 60, 60;
-    --border: hsl(0, 0%, 22%); /* Darker, less saturated border */
-    --input-bg-rgb: 38, 38, 38;
-    --input: hsl(0, 0%, 15%); /* Dark Gray for Input, distinct from card */
-    --ring: 0 75% 60%; /* Red for Focus Rings - kept */
+    --border-rgb: 45, 60, 45;
+    --border: hsl(130, 15%, 20%); /* Darker, green-tinted border */
+    --input-bg-rgb: 25, 35, 25;
+    --input: hsl(130, 12%, 12%); /* Dark Green/Gray for Input, distinct from card */
+    --ring: 145 65% 50%; /* Green for Focus Rings */
 
     --radius: 0.5rem;
 
-    --chart-1: 0 70% 60%;   /* Red variant */
-    --chart-2: 210 70% 60%; /* Blue variant */
-    --chart-3: 120 60% 50%; /* Green variant */
-    --chart-4: 45 70% 60%;  /* Orange variant */
-    --chart-5: 280 60% 60%; /* Purple variant */
+    --chart-1: 145 70% 50%;   /* Green variant */
+    --chart-2: 210 70% 60%; /* Blue variant (can be adjusted if needed) */
+    --chart-3: 50 70% 50%;  /* Yellow/Orange variant (can be adjusted) */
+    --chart-4: 0 65% 55%;   /* Red variant (can be adjusted) */
+    --chart-5: 280 60% 60%; /* Purple variant (can be adjusted) */
 
-    /* Sidebar variables - refined dark theme */
-    --sidebar-background-start-rgb: 10,10,10; /* Darker sidebar start */
-    --sidebar-background-end-rgb: 25,0,0; /* Deeper red end for sidebar */
+    /* Sidebar variables - green/black theme */
+    --sidebar-background-start-rgb: 8, 8, 8; /* Darker sidebar start */
+    --sidebar-background-end-rgb: 0, 20, 8; /* Deeper green end for sidebar */
     --sidebar-background: linear-gradient(145deg, rgb(var(--sidebar-background-start-rgb)) 0%, rgb(var(--sidebar-background-end-rgb)) 100%);
-    --sidebar-foreground: 210 35% 92%; /* Slightly brighter sidebar foreground */
-    --sidebar-primary: 0 70% 50%; /* Red for sidebar primary */
+    --sidebar-foreground: 200 30% 90%; /* Slightly brighter sidebar foreground */
+    --sidebar-primary: 145 60% 40%; /* Green for sidebar primary */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: hsl(0, 0%, 18%); /* Dark accent for sidebar hover */
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: hsl(0, 0%, 20%); /* Consistent darker border for sidebar */
-    --sidebar-ring: 0 75% 60%;
+    --sidebar-accent: hsl(130, 10%, 15%); /* Dark green accent for sidebar hover */
+    --sidebar-accent-foreground: 200 15% 92%;
+    --sidebar-border: hsl(130, 15%, 18%); /* Consistent darker green border for sidebar */
+    --sidebar-ring: 145 65% 50%;
   }
 
   .dark {
-    /* Using the same refined dark theme for .dark for consistency */
+    /* Using the same green/black theme for .dark for consistency */
     --background-start-rgb: 10, 10, 10;
-    --background-end-rgb: 30, 0, 0;
+    --background-end-rgb: 0, 25, 10;
     --background: linear-gradient(145deg, rgb(var(--background-start-rgb)) 0%, rgb(var(--background-end-rgb)) 100%);
-    --foreground: 210 40% 98%;
+    --foreground: 200 20% 96%;
 
-    --card-bg-rgb: 20, 20, 20;
-    --card: hsla(0, 0%, 8%, 0.92);
-    --card-foreground: 210 40% 96%;
+    --card-bg-rgb: 15, 20, 15;
+    --card: hsla(130, 15%, 7%, 0.92);
+    --card-foreground: 200 20% 94%;
 
-    --popover-bg-rgb: 25, 25, 25;
-    --popover: hsla(0, 0%, 10%, 0.95);
-    --popover-foreground: 210 40% 96%;
+    --popover-bg-rgb: 20, 25, 20;
+    --popover: hsla(130, 10%, 8%, 0.95);
+    --popover-foreground: 200 20% 94%;
 
-    --primary: 0 75% 55%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 145 65% 45%;
+    --primary-foreground: 200 0% 100%;
 
-    --secondary-bg-rgb: 50, 50, 50;
-    --secondary: hsl(0, 0%, 20%);
-    --secondary-foreground: 0 0% 95%;
+    --secondary-bg-rgb: 40, 50, 40;
+    --secondary: hsl(130, 10%, 18%);
+    --secondary-foreground: 200 15% 90%;
 
-    --muted-bg-rgb: 40, 40, 40;
-    --muted: hsl(0, 0%, 15%);
-    --muted-foreground: 210 30% 75%;
+    --muted-bg-rgb: 30, 40, 30;
+    --muted: hsl(130, 10%, 14%);
+    --muted-foreground: 200 25% 70%;
 
-    --accent: 0 80% 60%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 140 55% 55%;
+    --accent-foreground: 200 0% 100%;
 
     --destructive: 0 65% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border-rgb: 60, 60, 60;
-    --border: hsl(0, 0%, 22%);
-    --input-bg-rgb: 38, 38, 38;
-    --input: hsl(0, 0%, 15%);
-    --ring: 0 75% 60%;
+    --border-rgb: 45, 60, 45;
+    --border: hsl(130, 15%, 20%);
+    --input-bg-rgb: 25, 35, 25;
+    --input: hsl(130, 12%, 12%);
+    --ring: 145 65% 50%;
 
-    --chart-1: 0 70% 60%;
+    --chart-1: 145 70% 50%;
     --chart-2: 210 70% 60%;
-    --chart-3: 120 60% 50%;
-    --chart-4: 45 70% 60%;
+    --chart-3: 50 70% 50%;
+    --chart-4: 0 65% 55%;
     --chart-5: 280 60% 60%;
 
-     /* Sidebar variables - refined dark theme */
-    --sidebar-background-start-rgb: 10,10,10;
-    --sidebar-background-end-rgb: 25,0,0;
+     /* Sidebar variables - green/black theme */
+    --sidebar-background-start-rgb: 8, 8, 8;
+    --sidebar-background-end-rgb: 0, 20, 8;
     --sidebar-background: linear-gradient(145deg, rgb(var(--sidebar-background-start-rgb)) 0%, rgb(var(--sidebar-background-end-rgb)) 100%);
-    --sidebar-foreground: 210 35% 92%;
-    --sidebar-primary: 0 70% 50%;
+    --sidebar-foreground: 200 30% 90%;
+    --sidebar-primary: 145 60% 40%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: hsl(0, 0%, 18%);
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: hsl(0, 0%, 20%);
-    --sidebar-ring: 0 75% 60%;
+    --sidebar-accent: hsl(130, 10%, 15%);
+    --sidebar-accent-foreground: 200 15% 92%;
+    --sidebar-border: hsl(130, 15%, 18%);
+    --sidebar-ring: 145 65% 50%;
   }
 }
 
